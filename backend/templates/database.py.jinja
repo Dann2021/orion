@@ -1,0 +1,33 @@
+# database.py
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+from contextlib import contextmanager
+
+# Chemin ou url de la base de donnée
+DATABASE_URL = "sqlite:///database.db"
+
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    pool_pre_ping=True
+)
+
+Base = declarative_base()
+
+SessionLocal = sessionmaker(
+    bind=engine,
+    autocommit=False,
+    autoflush=False
+)
+
+# creation d'un contexte de la session de la base de donnees
+@contextmanager
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+# Fichier créé par {{ nom }} 

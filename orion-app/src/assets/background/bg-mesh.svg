@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="m1" x1="0" x2="1">
+      <stop offset="0" stop-color="#06b6d4"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+    <filter id="grain"><feTurbulence baseFrequency="0.5" numOctaves="1" stitchTiles="stitch"/></filter>
+  </defs>
+  <rect width="100%" height="100%" fill="#0f172a"/>
+  <g transform="translate(-200,-100) scale(1.5)" opacity="0.28">
+    <path d="M120 80 C220 20, 360 40, 480 120 C600 200, 760 260, 880 180 C1000 100, 1160 60, 1280 120 L1280 800 L0 800 Z"
+          fill="url(#m1)"/>
+  </g>
+  <g opacity="0.06" filter="url(#grain)">
+    <rect width="100%" height="100%" fill="white"/>
+  </g>
+</svg>

@@ -1,0 +1,6 @@
+/* src/styles/index.css */
+@import "./flexible.css";
+@import "./polices.css";
+@import "./navigateur.css";
+@import "./theme.css";
+/*@import "./tag.css";*/

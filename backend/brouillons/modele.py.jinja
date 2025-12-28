@@ -1,0 +1,63 @@
+# Projet final pour utiliser dans mon app
+# creation des modeles pour la base de données
+{# from sqlalchemy import Column, DateTime, Float, ForeignKey,Integer, String, Time, Boolean, Date #}
+from sqlalchemy import Column, ForeignKey ,Integer, {{ type_utilises | join(", ")  }}
+{# from sqlalchemy import Column,, Integer{% if type_utilises %}, {{ type_utilises | join(", ") }}{% endif %} # ici je choisis d'importer directement Integer comme on le retrouve dans les id #}
+
+
+from sqlalchemy.orm import relationship 
+from database import Base 
+
+{% for model in models %}
+{% set nom = model.nom.lower() %}
+{% set classe = model.nom.capitalize() %}
+{% set tablename = nom ~ "s" %}
+
+class {{ classe }}(Base):
+    # nom de la table dans la base de donnees
+    __tablename__ = "{{ tablename }}"
+
+
+    
+
+    # attributs (colonnes) de la classe {{ classe }} ({{ nom }})
+    id = Column(Integer, primary_key=True, index=True)
+{% for cle, valeur in model.attributs.items() %}
+    {{ cle }} = Column({{ valeur }}, index=True, nullable=False)
+{% endfor %}
+
+    # relations
+{% if relations | length > 0 %}
+    {% for rel in relations %}
+        {% if rel.type == "one_to_many" and rel.source == classe %}
+    {{ rel.field }} = relationship("{{ rel.target }}",back_populates="{{ rel.backref }}", cascade="all, delete-orphan")
+        {% elif rel.target == classe %}
+    {{ (rel.source ~ "_id") | lower }} = Column(Integer,ForeignKey("{{ (rel.source ~ 's') | lower }}.id"), nullable=False)
+    {{ rel.source | lower }} = relationship("{{ rel.source }}", back_populates="{{ rel.field }}")
+        {% endif %} 
+    {% endfor %}
+
+{% else %}
+        # pas de relation 
+{% endif %}
+
+
+
+    # donnees à voir
+    def data_{{ nom }}(self):
+        return {
+            "id": self.id,
+    {% for cle in model.attributs.keys() %}
+            "{{ cle }}": self.{{ cle }},
+    {% endfor %}
+    }
+
+    # pour plusieurs {{ nom }}s
+    @staticmethod
+    def list_data(items):
+        return [item.data_{{ nom }}() for item in items]
+
+{% endfor %}
+
+
+

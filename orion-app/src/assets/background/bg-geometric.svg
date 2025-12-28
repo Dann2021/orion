@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <rect width="100%" height="100%" fill="#f8fafc"/>
+  <g opacity="0.9">
+    <circle cx="200" cy="120" r="160" fill="#eef2ff"/>
+    <rect x="1200" y="60" width="360" height="360" rx="24" fill="#fff7ed"/>
+    <polygon points="800,250 900,120 1000,250 900,380" fill="#ecfeff" opacity="0.95"/>
+    <path d="M400 700 L600 500 L800 700 Z" fill="#eef8ff"/>
+  </g>
+  <g opacity="0.6">
+    <circle cx="1300" cy="720" r="220" fill="#eef2ff"/>
+  </g>
+</svg>

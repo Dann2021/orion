@@ -1,0 +1,25 @@
+.effet {
+  position: relative;
+  color: #444;
+  text-decoration: none;
+  /* padding: 8px 12px;*/
+  transition: all 0.3s ease-in-out;
+  display: inline-block;
+}
+
+.effet::after {
+  content: "";
+  position: absolute;
+  width: 60%; /* ✅ Bordure plus courte */
+  height: 2px;
+  left: 20%; /* ✅ Centrée horizontalement */
+  bottom: 0;
+  background: linear-gradient(to right, #333, #ccc);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+  transform-origin: center;
+}
+
+.effet:hover::after {
+  transform: scaleX(1);
+}

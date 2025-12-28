@@ -1,0 +1,62 @@
+# Projet final pour utiliser dans mon app
+# creation des modeles pour la base de données
+from sqlalchemy import Column, ForeignKey ,Integer, {{ type_utilises | join(", ")  }}
+{# from sqlalchemy import Column,, Integer{% if type_utilises %}, {{ type_utilises | join(", ") }}{% endif %} # ici je choisis d'importer directement Integer comme on le retrouve dans les id #}
+from sqlalchemy.orm import relationship 
+from database import Base 
+
+
+{% for model in models %}
+# ici on cree des variables pour faciliter la generation du code
+
+{% set nomClasseMin = model.nom.lower() %}
+{% set nomClasse = model.nom.capitalize() %}
+{% set tablename = nomClasseMin ~ "s" %}
+
+class {{ nomClasse }}(Base):
+    # nom de la table dans la base de donnees
+    __tablename__ = "{{ tablename }}"
+
+    # attributs (colonnes) de la nomClasse {{ nomClasse }} ({{ nomClasseMin }})
+    id = Column(Integer, primary_key=True, index=True)
+{% for cle, valeur in model.attributs.items() %}
+    {{ cle }} = Column({{ valeur }}, index=True, nullable=False)
+{% endfor %}
+
+    # relations
+{% if relations | length > 0 %}
+    {% for rel in relations %}
+    {% if rel.type == "one_to_many" and rel.source == nomClasse %}
+    {{ rel.champ }} = relationship("{{ rel.cible }}",back_populates="{{ rel.attribut_inverse }}", cascade="all, delete-orphan") 
+    {% endif %}
+
+    {% if rel.type == "one_to_many" and rel.cible == nomClasse %}
+    {{ (rel.source ~ "_id") | lower }} = Column(Integer,ForeignKey("{{ (rel.source ~ 's') | lower }}.id"), nullable=False)
+    {{ rel.source | lower }} = relationship("{{ rel.source }}", back_populates="{{ rel.champ }}")
+    {% endif %} 
+    {% endfor %}
+
+{% else %}
+    # pas de relation 
+{% endif %}
+
+
+
+    # donnees à voir
+    def data_{{ nomClasseMin }}(self):
+        return {
+            "id": self.id,
+    {% for cle in model.attributs.keys() %}
+            "{{ cle }}": self.{{ cle }},
+    {% endfor %}
+    }
+
+    # pour plusieurs {{ nomClasseMin }}s
+    @staticmethod
+    def list_data(items):
+        return [item.data_{{ nomClasseMin }}() for item in items]
+
+{% endfor %}
+
+
+
