@@ -1,0 +1,99 @@
+/* =========================================================
+   ORION – TAG DOT SYSTEM
+   Version: v0.1
+   Usage: logs, statuts, génération backend
+   ========================================================= */
+
+/* ---------- Base tag-dot ---------- */
+
+.tag {
+  background: var(--bg-surface-2);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.tag-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 6px 12px;
+  border-radius: 999px;
+
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+}
+
+/* Dot */
+.tag-dot::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* ---------- États ---------- */
+
+/* 🔵 Génération en cours */
+.tag-dot.processing {
+  color: var(--primary);
+}
+
+/* 🟣 Étape interne / log */
+.tag-dot.step {
+  color: var(--secondary);
+}
+
+/* 🟢 Backend prêt / succès */
+.tag-dot.ready {
+  color: var(--success);
+}
+
+/* 🟡 En attente */
+.tag-dot.pending {
+  color: var(--warning);
+}
+
+/* 🔴 Erreur */
+.tag-dot.error {
+  color: var(--danger);
+}
+
+/* ⚫ Désactivé / indisponible */
+.tag-dot.disabled {
+  color: var(--text-disabled);
+}
+
+/* ---------- Animations ---------- */
+
+/* Pulse léger pour la génération */
+@keyframes tag-pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.tag-dot.processing::before {
+  animation: tag-pulse 1.2s ease-in-out infinite;
+}
+
+
+

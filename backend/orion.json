@@ -1,0 +1,83 @@
+[
+  {
+    "nom": "Projet",
+    "attributs": [
+      {
+        "nom": "nom",
+        "type": "string",
+        "index": true,
+        "nullable": false
+      },
+      {
+        "nom": "auteur",
+        "type": "string",
+        "index": true,
+        "nullable": false
+      }
+    ],
+    "relations": [
+      {
+        "type": "one_to_many",
+        "source": "Projet",
+        "cible": "Classe",
+        "champ": "classes",
+        "attribut_inverse": "projet",
+        "nullable":false
+      },
+      {
+        "type": "one_to_many",
+        "source": "Projet",
+        "cible": "Data",
+        "champ": "datas",
+        "attribut_inverse": "projet",
+        "nullable":false
+      }
+    ]
+  },
+  {
+    "nom": "Classe",
+    "attributs": [
+      {
+        "nom": "nom",
+        "type": "string",
+        "index": true,
+        "nullable": false
+      }
+    ]
+  },
+  {
+    "nom": "Data",
+    "attributs": [
+      {
+        "nom": "type",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "nom": "host",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "nom": "port",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "nom": "username",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "nom": "password",
+        "type": "string",
+        "nullable": true
+      },
+      {
+        "nom": "name",
+        "type": "string",
+        "nullable": true
+      }
+    ]
+  }
+]

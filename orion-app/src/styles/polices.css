@@ -1,0 +1,127 @@
+
+/* =====================================================
+   FONTS – VERSION FINALE (VARIABLE FONTS COMPATIBLES)
+   ===================================================== */
+
+/* ---------------- Dancing Script (variable) ---------------- */
+@font-face {
+  font-family: "dancing";
+  src: url("../assets/fonts/Dancing_Script/DancingScript-VariableFont_wght.ttf") format("truetype");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------------- Jersey (statique) ---------------- */
+@font-face {
+  font-family: "jersey";
+  src: url("../assets/fonts/Jersey_15/Jersey15-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------------- Montserrat (variable) ---------------- */
+@font-face {
+  font-family: "montserrat";
+  src: url("../assets/fonts/montserrat/Montserrat-VariableFont_wght.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "montserrat";
+  src: url("../assets/fonts/montserrat/Montserrat-Italic-VariableFont_wght.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ---------------- Playwrite (variable) ---------------- */
+@font-face {
+  font-family: "playwrite";
+  src: url("../assets/fonts/Playwrite_US_Modern/PlaywriteUSModern-VariableFont_wght.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------------- Ubuntu (statique) ---------------- */
+@font-face {
+  font-family: "ubuntu";
+  src: url("../assets/fonts/Ubuntu/Ubuntu-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------------- Fira Code (variable) ---------------- */
+@font-face {
+  font-family: "fira";
+  src: url("../assets/fonts/Fira_Code/FiraCode-VariableFont_wght.ttf") format("truetype");
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------------- Inter (variable) ---------------- */
+@font-face {
+  font-family: "inter";
+  src: url("../assets/fonts/Inter/Inter-VariableFont.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "inter";
+  src: url("../assets/fonts/Inter/Inter-Italic-VariableFont.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ---------------- Merriweather (statique) ---------------- */
+@font-face {
+  font-family: "merri";
+  src: url("../assets/fonts/Merriweather/Merriweather-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "merri";
+  src: url("../assets/fonts/Merriweather/Merriweather-Black.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------------- Poppins (statique) ---------------- */
+@font-face {
+  font-family: "poppins";
+  src: url("../assets/fonts/Poppins/Poppins-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* =====================================================
+   CLASSES UTILITAIRES
+   ===================================================== */
+
+.dancing { font-family: "dancing", cursive; }
+.jersey { font-family: "jersey", sans-serif; }
+.montserrat { font-family: "montserrat", sans-serif; }
+.playwrite { font-family: "playwrite", serif; }
+.ubuntu { font-family: "ubuntu", sans-serif; }
+.fira { font-family: "fira", monospace; }
+.inter { font-family: "inter", sans-serif; }
+.merri { font-family: "merri", serif; }
+.poppins { font-family: "poppins", sans-serif; }
+
+/* Styles italique génériques */
+.italic { font-style: italic; }
+

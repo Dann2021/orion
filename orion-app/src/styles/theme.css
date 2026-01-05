@@ -1,0 +1,108 @@
+:root {
+  /* Backgrounds */
+  --bg-main: #0b0f1a; /* fond global */
+  --bg-surface: #111827; /* cartes / blocs */
+  --bg-surface-2: #1f2933; /* hover / secondary */
+
+  /* Textes */
+  --text-main: #e5e7eb; /* texte principal */
+  --text-muted: #9ca3af; /* texte secondaire */
+  --text-disabled: #6b7280;
+
+  /* Accents */
+  --primary: #38bdf8; /* bleu ciel (action) */
+  --primary-soft: #0ea5e9;
+  --secondary: #22d3ee; /* cyan */
+
+  /* États */
+  --success: #22c55e;
+  --warning: #facc15;
+  --danger: #ef4444;
+
+  /* Bordures */
+  --border: #1f2937;
+
+}
+
+body {
+  font-family: Inter, system-ui, sans-serif;
+  background: var(--bg-main);
+  color: var(--text-main);
+}
+
+.code,
+pre {
+  font-family: "JetBrains Mono", monospace;
+}
+
+
+.couleur-primaire {
+  color: var(--primary);
+}
+
+.couleur-texte-mute {
+  color: var(--text-muted);
+}
+
+
+
+
+.tag {
+  background: var(--bg-surface-2);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.tag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+.tag-dot-2 {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+
+
+
+
+.json-editor {
+  width: 100%;
+  min-height: 260px;
+
+  background: transparent; /* important */
+  color: var(--text-main);
+
+  border: none;            /* suppression bordure */
+  outline: none;           /* suppression focus par défaut */
+
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  line-height: 1.6;
+
+  padding: 12px;
+  resize: vertical;
+}
+
+.db-card {
+  border: 1px solid var(--border);
+  transition: all .2s ease;
+}
+
+.db-card.active {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(59,130,246,.25);
+}
+
+
+
