@@ -11,6 +11,8 @@ const TabLien = () => {
     { label: "Projets", chemin: "/projets" },
     { label: "API", chemin: "/api" },
     { label: "Docs", chemin: "/docs" },
+    //{ label: "Pricing", chemin: "/pricing" },
+    { label: "API KEY", chemin: "/cle-env" },
   ];
 
   const [activeTab, setActiveTab] = useState(0);

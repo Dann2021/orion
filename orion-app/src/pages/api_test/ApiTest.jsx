@@ -8,7 +8,7 @@ const style = {
 export default function ApiTest() {
   return (
     <Col>
-      <h1 className="mb-2">Documentation API</h1>
+      <h1 className="mb-1">Documentation API (REST)</h1>
       <PreviewApiTestJson dataJson={dataJson} />
     </Col>
   );
@@ -27,19 +27,19 @@ const PreviewApiTestJson = ({ dataJson }) => {
             <strong className="taille-pt inter">{item.path}</strong>
           </div>
 
-          <p className="mh-2 inter">{item.description}</p>
+          <p className="mh-1 inter">{item.description}</p>
 
           {/* REQUEST */}
           {item.request && (
             <>
-              <h4 className="mh-3">Request body</h4>
-              <pre>{JSON.stringify(item.request.body, null, 2)}</pre>
+              <h4 className="mh-1">Request body</h4>
+              <pre className="taille-pt">{JSON.stringify(item.request.body, null, 2)}</pre>
             </>
           )}
 
           {/* RESPONSE */}
-          <h4 className="mh-3">Response ({item.response.status})</h4>
-          <pre>{JSON.stringify(item.response.body, null, 2)}</pre>
+          <h4 className="mh-1">Response ({item.response.status})</h4>
+          <pre className="taille-pt">{JSON.stringify(item.response.body, null, 2)}</pre>
         </div>
       ))}
     </div>

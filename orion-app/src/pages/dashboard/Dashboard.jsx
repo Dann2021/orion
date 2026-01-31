@@ -4,7 +4,7 @@ import {
   Folder,
   MoreHorizontal,
   SettingsIcon,
-  User2Icon,
+  User2Icon
 } from "lucide-react";
 import { useState } from "react";
 import { baseProjet, baseUrl } from "../../api/api";
@@ -38,7 +38,7 @@ export default function Dashboard() {
 
   // import du hooks useDataPost
   const { loading, postData, success } = useDataPost(
-    `${baseUrl}${baseProjet}/`
+    `${baseUrl}${baseProjet}/`,
   );
 
   // creation de la fonction pour envoyer les donnees du formulaire
@@ -55,7 +55,7 @@ export default function Dashboard() {
   };
 
   return (
-    <Col className={"gap-5"}>
+    <Col className={"gap-5 bloc-myn-11"}>
       <h1 className="inter">Dashboard</h1>
 
       <h3 style={{ color: "var(--text-muted)" }}>Créez un nouveau projet</h3>
@@ -167,6 +167,9 @@ export default function Dashboard() {
           )}
         </ul>
       </Bloc>
+
+     
     </Col>
   );
 }
+

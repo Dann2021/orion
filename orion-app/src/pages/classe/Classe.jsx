@@ -1,5 +1,11 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ActivityIcon, Braces, CheckCircle2Icon, Download } from "lucide-react";
+import {
+  ActivityIcon,
+  Braces,
+  CheckCircle2Icon,
+  Download,
+  HelpCircleIcon,
+} from "lucide-react";
 import { useState } from "react";
 import { baseProjet, baseUrl } from "../../api/api";
 import { Bloc, Bouton, Card, Col, Input, Ligne } from "../../composants";
@@ -48,7 +54,7 @@ export default function Classe() {
 
   // import du hooks
   const { postData, success } = useDataPost(
-    `${baseUrl}${baseProjet}/generate/${projetId}`
+    `${baseUrl}${baseProjet}/generate/${projetId}`,
   );
   // ========== JSON HANDLER ==========
   const handleJsonChange = (value) => {
@@ -72,7 +78,10 @@ export default function Classe() {
         type: selectedDb,
         ...dbConfig,
       },
+      session: activeSession,
     };
+
+    // console.log("Données envoyées au backend :", dataSend);
 
     // on met à jour le isActive pour afficher activer le bouton de téléchargement
     setIsActive(true);
@@ -95,6 +104,12 @@ export default function Classe() {
 
   const downloadBackend = (projectName) => {
     window.location.href = `${baseUrl}download/${projectName}`;
+  };
+
+  // ================= State pour les sessions =================
+  const [activeSession, setActiveSession] = useState(false);
+  const toggleSession = () => {
+    setActiveSession(!activeSession);
   };
 
   return (
@@ -155,6 +170,33 @@ export default function Classe() {
           </AnimatePresence>
         </Card.Corps>
       </Card>
+
+      {/** CONFIGURATION SUPPLEMENTAIRE */}
+      <Bloc className={"ronde p-2"} style={style} type={"myn"} nombre={10}>
+        <div className="aff-flex gap-2 ai-mil">
+          <h3>Gestion des sessions</h3>
+          <HelpCircleIcon />
+        </div>
+
+        <div className="aff-flex fd-col mh-5 gap-3">
+          <div className="aff-flex jc-sb ai-mil mb-2">
+            <span className="te-noir tag">Session (Flask)</span>
+            <BtnCol
+              classeName={"curseur-pointeur"}
+              onClick={toggleSession}
+              type={"rond"}
+            />
+          </div>
+          <div className="aff-flex jc-sb ai-mil">
+            <span className="te-noir tt-maj tag">jwt_extended</span>
+            <BtnCol
+              classeName={"curseur-pointeur"}
+              onClick={toggleSession}
+              type={"rond"}
+            />
+          </div>
+        </div>
+      </Bloc>
 
       {/** CARD DE CHOIX  POUR BASE DE DONNée */}
       <Bloc className={"ronde p-2"} style={style} type={"myn"} nombre={10}>

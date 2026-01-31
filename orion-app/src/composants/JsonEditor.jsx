@@ -1,4 +1,5 @@
 import Editor from "@monaco-editor/react";
+import { ORION_MODELS_SCHEMA } from "../schema_completion_orion/orion.schema";
 
 // monacoTheme.js
 const orionDarkTheme = {
@@ -35,6 +36,10 @@ export default function JsonEditor({ value, onChange, editer }) {
   const handleMount = (editor, monaco) => {
     monaco.editor.defineTheme("orion-dark", orionDarkTheme);
     monaco.editor.setTheme("orion-dark");
+    monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+      validate: true,
+      schemas: [ORION_MODELS_SCHEMA],
+    });
   };
 
   return (

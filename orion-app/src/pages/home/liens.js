@@ -1,4 +1,4 @@
-import { Book, BracesIcon, Code, Folder, LayoutDashboard } from "lucide-react";
+import { Book, BracesIcon, Code, Folder, KeyRound, LayoutDashboard } from "lucide-react";
 
 export const liens = [
   {
@@ -37,6 +37,20 @@ export const liens = [
     icone: Book,
     etat: true
   },
+  /*{
+    id: 6,
+    lien: "pricing",
+    label: "Princing",
+    icone: Banknote,
+    etat: true
+  }, */
+  {
+    id: 7,
+    lien:   "cle-env",
+    label: "API KEY",
+    icone : KeyRound,
+    etat: true
+  }
 
   
 ];

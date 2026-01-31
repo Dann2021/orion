@@ -1,0 +1,180 @@
+{% set nom = model.nom | lower %}
+{% set classe = model.nom | capitalize %}
+{% set blueprint = nom ~ '_bp' %}
+
+from flask import Blueprint, jsonify, request, abort
+from modeles.models import {{ classe }}
+from database import get_db
+
+{{ blueprint }} = Blueprint(
+    "{{ nom }}s",
+    __name__,
+    url_prefix="/api/v1/{{ nom }}s"
+)
+
+# =========================
+# Utils
+# =========================
+
+def success(data=None, meta=None, status=200):
+    return jsonify({
+        "status": "success",
+        "data": data,
+        "meta": meta or {}
+    }), status
+
+
+def error(message, status=400):
+    return jsonify({
+        "status": "error",
+        "message": message
+    }), status
+
+
+# =========================
+# CREATE
+# =========================
+
+@{{ blueprint }}.post("/")
+def create_{{ nom }}():
+    data = request.get_json()
+    if not data:
+        return error("Aucune donnée fournie")
+
+    with get_db() as db:
+        item = {{ classe }}(
+            {% for attr in model.attributs %}
+            {{ attr.nom }}=data.get("{{ attr.nom }}"),
+            {% endfor %}
+        )
+        db.add(item)
+        db.commit()
+        return success(item.data_{{ nom }}(), status=201)
+
+
+# =========================
+# READ ONE
+# =========================
+
+@{{ blueprint }}.get("/<int:id>")
+def get_{{ nom }}(id):
+    with get_db() as db:
+        item = db.query({{ classe }}).get(id)
+        if not item:
+            abort(404)
+        return success(item.data_{{ nom }}())
+
+
+# =========================
+# READ LIST (pagination + filtres)
+# =========================
+
+@{{ blueprint }}.get("/")
+def list_{{ nom }}s():
+    with get_db() as db:
+        limit = request.args.get("limit", 20, type=int)
+        offset = request.args.get("offset", 0, type=int)
+
+        query = db.query({{ classe }})
+
+        {% for attr in model.attributs %}
+        if "{{ attr.nom }}" in request.args:
+            query = query.filter(
+                {{ classe }}.{{ attr.nom }} == request.args.get("{{ attr.nom }}")
+            )
+        {% endfor %}
+
+        total = query.count()
+        items = query.offset(offset).limit(limit).all()
+
+        return success(
+            data={{ classe }}.list_data(items),
+            meta={
+                "total": total,
+                "limit": limit,
+                "offset": offset
+            }
+        )
+
+
+# =========================
+# UPDATE (PUT / PATCH)
+# =========================
+
+@{{ blueprint }}.put("/<int:id>")
+def update_{{ nom }}(id):
+    data = request.get_json()
+    if not data:
+        return error("Aucune donnée fournie")
+
+    with get_db() as db:
+        item = db.query({{ classe }}).get(id)
+        if not item:
+            abort(404)
+
+        {% for attr in model.attributs %}
+        if "{{ attr.nom }}" in data:
+            item.{{ attr.nom }} = data["{{ attr.nom }}"]
+        {% endfor %}
+
+        db.commit()
+        return success(item.data_{{ nom }}())
+
+
+# =========================
+# DELETE
+# =========================
+
+@{{ blueprint }}.delete("/<int:id>")
+def delete_{{ nom }}(id):
+    with get_db() as db:
+        item = db.query({{ classe }}).get(id)
+        if not item:
+            abort(404)
+
+        db.delete(item)
+        db.commit()
+        return success({"message": "Ressource supprimée"})
+
+
+# =========================
+# RELATIONS
+# =========================
+
+{% if relations %}
+{% for rel in relations %}
+{% if rel.source == classe %}
+
+from modeles.models import {{ rel.cible }}
+
+@{{ blueprint }}.get("/<int:id>/{{ rel.champ }}")
+def get_{{ nom }}_{{ rel.champ }}(id):
+    with get_db() as db:
+        parent = db.query({{ classe }}).get(id)
+        if not parent:
+            abort(404)
+
+        items = parent.{{ rel.champ }}
+        return success({{ rel.cible }}.list_data(items))
+
+
+@{{ blueprint }}.post("/<int:id>/{{ rel.champ }}")
+def add_{{ rel.champ }}_to_{{ nom }}(id):
+    data = request.get_json()
+    if not data:
+        return error("Aucune donnée fournie")
+
+    with get_db() as db:
+        parent = db.query({{ classe }}).get(id)
+        if not parent:
+            abort(404)
+
+        item = {{ rel.cible }}(**data)
+        parent.{{ rel.champ }}.append(item)
+
+        db.commit()
+        return success(item.data_{{ rel.cible | lower }}(), status=201)
+
+{% endif %}
+{% endfor %}
+{% endif %}

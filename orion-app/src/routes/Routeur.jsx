@@ -8,6 +8,7 @@ import ApiTest from "../pages/api_test/ApiTest";
 import Classe from "../pages/classe/Classe";
 import Dashboard from "../pages/dashboard/Dashboard";
 import Docs from "../pages/docs/Docs";
+import PageEnv from "../pages/pageEnv/PageEnv";
 import Projet from "../pages/projet/Projet";
 
 function Routeur() {
@@ -22,13 +23,15 @@ function Routeur() {
         <Route path="classes" element={<Classe />} />
         <Route path="projets" element={<Projet />} />
         <Route path="api" element={<ApiTest />} />
-        
 
         <Route path="*" element={<PageErreur />} />
         <Route path="docs" element={<Docs />} />
 
+        <Route path="cle-env" element={<PageEnv />} />
+
         {/* plus tard :
         <Route path="projet" element={<Projet />} />
+        <Route path="pricing" element={<Pricing />} />
         
         */}
       </Route>

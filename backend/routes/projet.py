@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from modeles.models import Projet, Data
+
 from database import get_db
 from core import (
     generateur,
@@ -44,7 +45,7 @@ def fabrique_database_url(db):
         )
 
 
-def generate_backend_for_projet(projet_id, raw_schema, base_de_donnees):
+def generate_backend_for_projet(projet_id, raw_schema, base_de_donnees, session):
 
     # ⚠️ garder la session ouverte pendant TOUTE l'utilisation ORM
     with get_db() as session_db:
@@ -59,6 +60,9 @@ def generate_backend_for_projet(projet_id, raw_schema, base_de_donnees):
         # Arborescence
         modeles_path = ensure_dir(f"{base_path}/modeles")
         routes_path = ensure_dir(f"{base_path}/routes")
+        erreurs_path = ensure_dir(f"{base_path}/erreurs")
+        utils_path = ensure_dir(f"{base_path}/utils")
+        schemas_path = ensure_dir(f"{base_path}/schemas")
 
         # Construction des modèles depuis la DB
 
@@ -85,11 +89,18 @@ def generate_backend_for_projet(projet_id, raw_schema, base_de_donnees):
         nom_fichier="models.py",
     )
 
+    # recuperation de la session
+
     # 2️⃣ routes CRUD (1 modèle à la fois)
+
     for model in schemas:
         generateur(
             template_name="route_api.py.jinja",
-            contexte={"model": model, "relations": model.get("relations", [])},
+            contexte={
+                "model": model,
+                "relations": model.get("relations", []),
+                "session": session,
+            },
             chemin_sortie=routes_path,
             nom_fichier=f"{model['nom'].lower()}.py",
         )
@@ -104,7 +115,7 @@ def generate_backend_for_projet(projet_id, raw_schema, base_de_donnees):
 
     generateur(
         template_name="app.py.jinja",
-        contexte={"blueprints": blueprints},
+        contexte={"blueprints": blueprints, "nom": projet.auteur, "session": session},
         chemin_sortie=base_path,
         nom_fichier="app.py",
     )
@@ -126,7 +137,6 @@ def generate_backend_for_projet(projet_id, raw_schema, base_de_donnees):
 
     # 5️⃣ fichiers système (AUCUN model ici)
     for tpl, fname in [
-        ("config.py.jinja", "config.py"),
         ("extensions.py.jinja", "extensions.py"),
     ]:
         generateur(
@@ -134,6 +144,48 @@ def generate_backend_for_projet(projet_id, raw_schema, base_de_donnees):
             contexte={"nom": projet.auteur},  # ✅ volontairement vide
             chemin_sortie=base_path,
             nom_fichier=fname,
+        )
+
+    # generation de config.py
+    generateur(
+        template_name="config.py.jinja",
+        contexte={
+            "nom": projet.auteur,
+            "session": session,
+        },
+        chemin_sortie=base_path,
+        nom_fichier="config.py",
+    )
+    # generation du fichier handle_erreurs
+    generateur(
+        template_name="handle_erreurs.py.jinja",
+        contexte={
+            "nom": projet.auteur,
+        },
+        chemin_sortie=erreurs_path,
+        nom_fichier="handle_erreurs.py",
+    )
+
+    # generation du fichier utiles.py
+    generateur(
+        template_name="utils.py.jinja",
+        contexte={
+            "nom": projet.auteur,
+        },
+        chemin_sortie=utils_path,
+        nom_fichier="utils.py",
+    )
+
+    # generation du fichier schema.py
+    for model in schemas:
+        generateur(
+            template_name="schema.py.jinja",
+            contexte={
+                "model": model,
+                "auteur": projet.auteur,
+            },
+            chemin_sortie=schemas_path,
+            nom_fichier=f"{model['nom'].lower()}_schema.py",
         )
 
 
@@ -175,6 +227,7 @@ def generate(projet_id):
         data = request.get_json()
         modele = data.get("modele")
         base_de_donnees = data.get("databaseConfig")
+        session = data.get("session")
 
         if not modele or not base_de_donnees:
             return jsonify({"error": "modele ou databaseConfig manquant"}), 400
@@ -201,7 +254,10 @@ def generate(projet_id):
             session_db.refresh(db_config)
 
         generate_backend_for_projet(
-            projet_id, raw_schema=modele, base_de_donnees=base_de_donnees
+            projet_id,
+            raw_schema=modele,
+            base_de_donnees=base_de_donnees,
+            session=session,
         )
         return jsonify({"message": "Backend généré avec succès"}), 200
     except Exception as e:

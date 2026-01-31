@@ -44,8 +44,7 @@ class {{ nomClasse }}(Base):
     # pas de relation 
 {% endif %}
 
-    {# A enlever #}
-    {# donnees à voir
+    # donnees à voir
     def data_{{ nomClasseMin }}(self):
         return {
             "id": self.id,
@@ -57,7 +56,7 @@ class {{ nomClasse }}(Base):
     # pour plusieurs {{ nomClasseMin }}s
     @staticmethod
     def list_data(items):
-        return [item.data_{{ nomClasseMin }}() for item in items] #}
+        return [item.data_{{ nomClasseMin }}() for item in items]
 {% endfor %}
 
 

@@ -3,18 +3,11 @@
 {% set blue_print = nom ~ '_bp' %}
 {% set com = "Ajout du contexte de la session de la base de donnée " %}
 {% set com404 = "# Si la ressource n'existe pas, une erreur 404 est levé" %}
-{% set nomFichierSchema = nom ~ "_schema" %}
-{% set nomSchema = classe ~ "Schema" %}
-{% set schemaOne = nom ~ "_schema" %}
-{% set schemaMany = nom ~ "_schemas" %}
 {# modele pour les routes #}
 from flask import Blueprint, jsonify, request, abort
 from modeles.models import {{ classe }}
 from utils.utils import success, error
 from database import get_db
-from schemas.{{ nomFichierSchema }} import {{ nomSchema }}
-from marshmallow import ValidationError
-
 {% if session %}
 from flask import session
 {% endif %}
@@ -25,9 +18,6 @@ from flask import session
 # creation  d'un CRUD (Create, Read, Update, Delete)
 # La création de cette api suit le pattern RESTful
 
-# creation des modeles schema pour la serialisation/deserialisation
-{{ schemaOne }} = {{ nomSchema }}()
-{{ schemaMany }} = {{ nomSchema }}(many=True)
 
 # Creation de la ressource {{ nom }} 
 @{{ blue_print }}.post("/")
@@ -35,25 +25,26 @@ def creer_ressource_{{ nom }}():
 
     # {{ com }}
     with get_db() as db:
-        try: 
-            # creation du data_get pour recuperer les donnees du POST
-            data = request.get_json()
 
-            # creation d'une instance de la classe {{ classe }}
-            {{ nom }} = {{ schemaOne }}.load(data, session=db)
-            
-            # Ajout dans la session 
-            db.add({{ nom }})
-            db.commit()
+        # creation du data_get pour recuperer les donnees du POST
+        data = request.get_json()
 
-            {# creation de la session #}
-            {% if session %}
-            # Stockage de l'id généré en session
-            session["{{ nom }}_id"] = {{ nom }}.id
-            {% endif %}
-            return success(data={{ schemaOne }}.dump({{ nom }}), status=201)
-        except ValidationError as err:
-            return error(message=err.messages)
+        # creation d'une instance de la classe {{ classe }}
+        {{ nom }} = {{ model.nom }}(
+        {% for element in model.attributs %}
+            {{ element.nom }} = data.get("{{ element.nom }}"),
+        {% endfor %})
+
+        # Ajout dans la session 
+        db.add({{ nom }})
+        db.commit()
+
+        {# creation de la session #}
+        {% if session %}
+        # Stockage de l'id généré en session
+        session["{{ nom }}_id"] = {{ nom }}.id
+        {% endif %}
+        return jsonify({{ nom }}.data_{{ nom }}()), 201
 
 
 # route pour voir une ressource
@@ -69,23 +60,20 @@ def recuperer_ressource_{{ nom }}(id):
         if not {{ nom }}:
             {{ com404 }}
             abort(404) 
-        return success(data={{ schemaOne }}.dump({{ nom }}))
+        return jsonify({"{{ nom }}": {{ nom }}.data_{{ nom }}() }), 200
 
 
 # READ LIST (pagination + filtres)
-# route pour voir toutes les ressources
-@{{ blue_print }}.get("/")
-def list_{{ nom }}s():
 
-    # {{ com }}
+@{{ blue_print }}.get("/all")
+def list_{{ nom }}s():
     with get_db() as db:
 
         # creation de la pagination + filtres
         limit = request.args.get("limit", 20, type=int)
         offset = request.args.get("offset", 0, type=int)
-
         query = db.query({{ classe }})
-        {# filtres dynamiques #}
+
         {% for attr in model.attributs %}
         if "{{ attr.nom }}" in request.args:
             query = query.filter({{ classe }}.{{ attr.nom }} == request.args.get("{{ attr.nom }}"))
@@ -95,13 +83,14 @@ def list_{{ nom }}s():
         items = query.offset(offset).limit(limit).all()
 
         return success(
-            data={{ schemaMany }}.dump(items),
+            data={{ classe }}.list_data(items),
             meta={
                 "total": total,
                 "limit": limit,
                 "offset": offset
             }
         )
+
 
 # route pour mettre a jour une ressource
 @{{ blue_print }}.put("/<int:id>")
@@ -118,12 +107,34 @@ def mettre_a_jour_ressource_{{ nom }}(id):
             abort(404)
 
         # recuperation des donnees du PUT
-        try:
-            updated = {{ schemaOne }}.load(request.get_json(),instance={{ nom }},session=db,partial=True)
-            db.commit()
-            return success(data={{ schemaOne }}.dump(updated))
-        except ValidationError as err:
-            return error(message=err.messages)
+        data = request.get_json()
+
+        # mise a jour des attributs
+        {% for element in model.attributs %}
+        if "{{ element.nom }}" in data:
+            {{ nom }}.{{ element.nom }} = data.get("{{ element.nom }}")
+        {% endfor %}
+
+        db.commit()
+
+        return jsonify({"{{ nom }}": {{ nom }}.data_{{ nom }}() }), 200
+
+
+# route pour voir toutes les ressources
+@{{ blue_print }}.get("/")
+def recuperer_ressources_{{ nom }}():
+
+    # {{ com }}
+    with get_db() as db:
+
+        # verification de l'existence de la ressource
+        {{ nom }}_list = db.query({{ classe }}).all()
+
+        if not {{ nom }}_list:
+            {{ com404 }}
+            abort(404)
+
+        return jsonify({"{{ nom }}s": {{ classe }}.list_data({{ nom }}_list)}), 200
 
 
 # route pour supprimer une ressource 
@@ -143,8 +154,7 @@ def supprimer_ressource_{{ nom }}(id):
         db.delete({{ nom }})
         db.commit()
         
-        return success(data={"message": "ressource supprimée avec succes"})
-
+        return jsonify({"message": "ressource supprimée avec succes" }), 200
 
 
 
@@ -157,9 +167,6 @@ def supprimer_ressource_{{ nom }}(id):
 
         {% if rel.source == classe %}
 from modeles.models import {{ rel.cible }}
-from schemas.{{ rel.cible | lower }}_schema import {{ rel.cible }}Schema
-
-{{ rel.cible | lower }}_schemas = {{ rel.cible }}Schema(many=True)
 
 # route pour voir les {{ rel.cible }}s d'une ressource {{ rel.source }}
 @{{ blue_print }}.get("/<int:id>/{{ rel.champ }}")
@@ -177,7 +184,9 @@ def recuperer_ressource_lie_{{ nom }}_{{ rel.champ }}(id):
 
         # recuperation  des ressources liees
         items = ressource.{{ rel.champ }}
-        return success(data={{ rel.cible | lower }}_schemas.dump(items))
+        return jsonify({
+            "{{ rel.champ }}": {{ rel.cible }}.list_data(items)
+        }), 200
 
         {% endif %}
     {% endfor %}
