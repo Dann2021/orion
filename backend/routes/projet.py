@@ -45,7 +45,7 @@ def fabrique_database_url(db):
         )
 
 
-def generate_backend_for_projet(projet_id, raw_schema, base_de_donnees, session):
+def generate_backend_for_projet(projet_id, raw_schema, base_de_donnees, session, jwt):
 
     # ⚠️ garder la session ouverte pendant TOUTE l'utilisation ORM
     with get_db() as session_db:
@@ -100,6 +100,7 @@ def generate_backend_for_projet(projet_id, raw_schema, base_de_donnees, session)
                 "model": model,
                 "relations": model.get("relations", []),
                 "session": session,
+                "jwt": jwt,
             },
             chemin_sortie=routes_path,
             nom_fichier=f"{model['nom'].lower()}.py",
@@ -228,6 +229,7 @@ def generate(projet_id):
         modele = data.get("modele")
         base_de_donnees = data.get("databaseConfig")
         session = data.get("session")
+        jwt = data.get("jwt")
 
         if not modele or not base_de_donnees:
             return jsonify({"error": "modele ou databaseConfig manquant"}), 400
@@ -258,6 +260,7 @@ def generate(projet_id):
             raw_schema=modele,
             base_de_donnees=base_de_donnees,
             session=session,
+            jwt=jwt,
         )
         return jsonify({"message": "Backend généré avec succès"}), 200
     except Exception as e:
