@@ -7,20 +7,27 @@
 {% set nomSchema = classe ~ "Schema" %}
 {% set schemaOne = nom ~ "_schema" %}
 {% set schemaMany = nom ~ "_schemas" %}
+{% set session_id = nom ~ "_id" %}
+{% set base_route_api = nom ~ 's' %}
+{% import "variables/variable.jinja" as vars %}
+{% from "variables/variable.jinja" import ROUTE_COLLECTION, ROUTE_ITEM, ROUTE_RELATION_PREFIX %}
 {# modele pour les routes #}
 from flask import Blueprint, jsonify, request, abort
 from modeles.models import {{ classe }}
-from utils.utils import success, error
+from utils.utils import reponse_json
 from database import get_db
 from schemas.{{ nomFichierSchema }} import {{ nomSchema }}
 from marshmallow import ValidationError
-
 {% if session %}
 from flask import session
 {% endif %}
+{% if jwt %}
+{{ vars.JWT_IMPORTS }}
+{% endif %}
+
 
 # creation du blueprint_{{ nom }}
-{{ blue_print }} = Blueprint("{{ nom }}s", __name__, url_prefix="/api/{{ nom }}s")
+{{ blue_print }} = Blueprint("{{ base_route_api }}", __name__, url_prefix="/api/{{ base_route_api }}")
 
 # creation  d'un CRUD (Create, Read, Update, Delete)
 # La création de cette api suit le pattern RESTful
@@ -38,6 +45,8 @@ def creer_ressource_{{ nom }}():
         try: 
             # creation du data_get pour recuperer les donnees du POST
             data = request.get_json()
+            if data is None:
+                abort(400, description="JSON invalide")
 
             # creation d'une instance de la classe {{ classe }}
             {{ nom }} = {{ schemaOne }}.load(data, session=db)
@@ -49,11 +58,12 @@ def creer_ressource_{{ nom }}():
             {# creation de la session #}
             {% if session %}
             # Stockage de l'id généré en session
-            session["{{ nom }}_id"] = {{ nom }}.id
+            session["{{ session_id }}"] = {{ nom }}.id
             {% endif %}
-            return success(data={{ schemaOne }}.dump({{ nom }}), status=201)
+            return reponse_json(data={{ schemaOne }}.dump({{ nom }}), status=201)
         except ValidationError as err:
-            return error(message=err.messages)
+            abort(400, description=str(err.messages))
+
 
 
 # route pour voir une ressource
@@ -69,13 +79,13 @@ def recuperer_ressource_{{ nom }}(id):
         if not {{ nom }}:
             {{ com404 }}
             abort(404) 
-        return success(data={{ schemaOne }}.dump({{ nom }}))
+        return reponse_json(data={{ schemaOne }}.dump({{ nom }}))
 
 
-# READ LIST (pagination + filtres)
-# route pour voir toutes les ressources
+
+# route pour voir toutes les ressources (avec pagination et filtres)
 @{{ blue_print }}.get("/")
-def list_{{ nom }}s():
+def recuperer_ressources_{{ nom }}s():
 
     # {{ com }}
     with get_db() as db:
@@ -94,7 +104,7 @@ def list_{{ nom }}s():
         total = query.count()
         items = query.offset(offset).limit(limit).all()
 
-        return success(
+        return reponse_json(
             data={{ schemaMany }}.dump(items),
             meta={
                 "total": total,
@@ -119,11 +129,14 @@ def mettre_a_jour_ressource_{{ nom }}(id):
 
         # recuperation des donnees du PUT
         try:
-            updated = {{ schemaOne }}.load(request.get_json(),instance={{ nom }},session=db,partial=True)
+            data = request.get_json()
+            if data is None:
+                abort(400, description="JSON invalide")
+            updated = {{ schemaOne }}.load(data,instance={{ nom }},session=db,partial=True)
             db.commit()
-            return success(data={{ schemaOne }}.dump(updated))
+            return reponse_json(data={{ schemaOne }}.dump(updated))
         except ValidationError as err:
-            return error(message=err.messages)
+            abort(400, description=str(err.messages))
 
 
 # route pour supprimer une ressource 
@@ -143,7 +156,7 @@ def supprimer_ressource_{{ nom }}(id):
         db.delete({{ nom }})
         db.commit()
         
-        return success(data={"message": "ressource supprimée avec succes"})
+        return reponse_json(data={"message": "ressource supprimée avec succes"})
 
 
 
@@ -177,7 +190,7 @@ def recuperer_ressource_lie_{{ nom }}_{{ rel.champ }}(id):
 
         # recuperation  des ressources liees
         items = ressource.{{ rel.champ }}
-        return success(data={{ rel.cible | lower }}_schemas.dump(items))
+        return reponse_json(data={{ rel.cible | lower }}_schemas.dump(items))
 
         {% endif %}
     {% endfor %}
