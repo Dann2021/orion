@@ -7,7 +7,7 @@ import { liens } from "./liens";
 
 export default function Home() {
   return (
-    <Conteneur className={"ronde-1"}>
+    <Conteneur>
       <div className="aff-flex jc-mil gap-3  mh-2 ronde-1">
         <Bloc
           type={"myn"}
