@@ -13,12 +13,15 @@ def enregistreur_erreur(app):
             403: "Accès refusé",
             404: "Ressource introuvable",
         }
+        message = getattr(e, "description", None)
+        if not message or message == e.name:
+            message = messages_erreurs.get(e.code, "Erreur HTTP")
 
         return (
             jsonify(
                 {
                     "erreur": e.name,
-                    "message": messages_erreurs.get(e.code, "Erreur HTTP"),
+                    "message": message,
                     "statut": e.code,
                 }
             ),
