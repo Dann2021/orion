@@ -2,17 +2,13 @@ from flask import jsonify
 
 
 # fichier utilitaires
-def success(data=None, meta=None, status=200):
+def reponse_json(data=None, meta=None, status=200):
     return jsonify({
         "status": "success", 
         "data": data, 
         "meta": meta or {}
         }
         ), status
-
-
-def error(message, status=400):
-    return jsonify({"status": "error", "message": message}), status
 
 
 
