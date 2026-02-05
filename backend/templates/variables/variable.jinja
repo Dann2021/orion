@@ -1,0 +1,14 @@
+{% set JWT_IMPORTS = 
+"from flask_jwt_extended import (\n"
+"    create_access_token,\n"
+"    get_jwt_identity,\n"
+"    jwt_required,\n"
+"    set_access_cookies,\n"
+"    unset_jwt_cookies\n"
+")"
+%}
+
+{# Routes CRUD génériques (le blueprint porte déjà /api/{{ base_route_api }}) #}
+{% set ROUTE_COLLECTION = "/" %}
+{% set ROUTE_ITEM = "/<int:id>" %}
+{% set ROUTE_RELATION_PREFIX = "/<int:id>/" %}
