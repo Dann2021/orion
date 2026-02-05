@@ -27,28 +27,29 @@ export const DATABASES = [
 
 export const modeleJson = [
   {
-    nom: "Projet",
+    nom: "User",
     attributs: [
-      { nom: "nom", unique: true, type: "string" },
-      { nom: "prenom", unique: true, type: "string" },
-      { nom: "age", unique: true, type: "integer" },
-      { nom: "date", unique: true, type: "date" },
+      {nom: "nom", type: "string" },
+      {nom: "email", type: "string", unique:true},
+      {nom:"role", type:"string", default:"user"}
     ],
     relations: [
       {
         type: "one_to_many",
-        source: "Projet",
-        cible: "Classe",
-        champ: "classes",
-        attribut_inverse: "projet",
+        source: "User",
+        cible: "Publication",
+        champ: "publications",
+        attribut_inverse: "user",
       },
     ],
   },
   {
-    nom: "Classe",
+    nom: "Publication",
     attributs: [
-      { nom: "age", unique: true, type: "integer" },
-      { nom: "enVie", unique: true, type: "bool" },
+      { nom: "titre",  type: "string"},
+      {nom: "contenu", type: "texte"},
+      {nom: "date_creation", type: "date"},
+      { nom: "is_public", type: "bool" },
     ],
   },
 ];
