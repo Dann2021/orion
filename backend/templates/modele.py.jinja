@@ -17,7 +17,7 @@ class {{ nomClasse }}(Base):
     # nom de la table dans la base de donnees
     __tablename__ = "{{ tablename }}"
 
-    # attributs (colonnes) de la nomClasse {{ nomClasse }} ({{ nomClasseMin }})
+    # attributs (colonnes) de la classe {{ nomClasse }} ({{ nomClasseMin }})
     id = Column(Integer, primary_key=True, index=True)
 {% for attr in model.attributs %}
     {{ attr.nom }} = Column({{ attr.type }}{% if attr.primary_key is defined %}, primary_key={{ attr.primary_key | lower | capitalize }}{% endif %}{% if attr.nullable is defined %}, nullable={{ attr.nullable | lower | capitalize }}{% endif %}{% if attr.unique is defined %}, unique={{ attr.unique | lower | capitalize }}{% endif %}{% if attr.index is defined %}, index={{ attr.index | lower | capitalize }}{% endif %}{% if attr.default is defined %}, default="{{ attr.default | lower  }}"{% endif %})
