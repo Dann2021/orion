@@ -79,6 +79,7 @@ export default function Classe() {
         ...dbConfig,
       },
       session: activeSession,
+      jwt: jwtSession
     };
 
     // console.log("Données envoyées au backend :", dataSend);
@@ -111,6 +112,11 @@ export default function Classe() {
   const toggleSession = () => {
     setActiveSession(!activeSession);
   };
+
+
+  // ================ State pour les jwt ==================
+  const [jwtSession, setJwtSession] = useState(false)
+  const toggleJwtSession = () => setJwtSession(!jwtSession)
 
   return (
     <Col className="gap-5">
@@ -191,7 +197,7 @@ export default function Classe() {
             <span className="te-noir tt-maj tag">jwt_extended</span>
             <BtnCol
               classeName={"curseur-pointeur"}
-              onClick={toggleSession}
+              onClick={toggleJwtSession}
               type={"rond"}
             />
           </div>
