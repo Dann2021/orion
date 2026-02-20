@@ -162,6 +162,7 @@ def parseur_modele(schema: dict, type_mapping: dict) -> dict:
         "nom": schema["nom"],
         "attributs": [],
         "relations": schema.get("relations", []),
+        "protege": schema.get("protege"),
     }
 
     attributs = schema.get("attributs", [])

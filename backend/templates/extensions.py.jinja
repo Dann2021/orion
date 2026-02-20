@@ -1,11 +1,15 @@
 from flask_bcrypt import Bcrypt 
+{% if use_jwt %}
 from flask_jwt_extended import JWTManager
+{% endif %}
 
 
 
 
 bcrypt = Bcrypt()
+{% if use_jwt %}
 jwt = JWTManager()
+{% endif %}
 
 
 

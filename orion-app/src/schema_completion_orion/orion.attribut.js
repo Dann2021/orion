@@ -34,6 +34,7 @@ export const ORION_ATTRIBUT_SCHEMA = {
       type: "boolean",
       default: false
     },
+ 
 
     default: {
       description: "Valeur par défaut",

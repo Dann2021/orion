@@ -57,6 +57,7 @@ pre {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  transition: all .2s ease;
 }
 .tag-dot {
   width: 6px;
@@ -106,3 +107,34 @@ pre {
 
 
 
+/* 🔥 Quand le parent est actif, on stylise le tag */
+.tag-selected.active .tag {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(59,130,246,.25);
+}
+
+
+.tag-selected.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tag-selected.disabled .tag {
+  pointer-events: none;
+}
+
+
+
+.token-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 24px;
+  backdrop-filter: blur(6px);
+  transition: all 0.3s ease;
+}
+
+.token-card:hover {
+  border-color: rgba(77, 163, 255, 0.3);
+  box-shadow: 0 0 25px rgba(77, 163, 255, 0.08);
+}

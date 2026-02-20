@@ -1,19 +1,36 @@
+{% if use_jwt %}
+{% set config_jwt = config_jwt or {} %}
+{% set access_token = config_jwt.access_token if config_jwt.access_token is defined else 15 %}
+{% set refresh_token = config_jwt.refresh_token if config_jwt.refresh_token is defined else 7 %}
+{% set same_site = config_jwt.same_site if config_jwt.same_site is defined else "Lax" %}
+{% set token_storage = config_jwt.token_storage or {} %}
+{% set jwt_security = config_jwt.jwt_security or {} %}
+{% set token_headers = token_storage.headers if token_storage.headers is defined else true %}
+{% set token_cookie = token_storage.cookie if token_storage.cookie is defined else false %}
+{% set cookie_secure = jwt_security.secure if jwt_security.secure is defined else false %}
+{% set cookie_httponly = jwt_security.httponly if jwt_security.httponly is defined else true %}
+{% set token_locations = [] %}
+{% if token_headers %}{% do token_locations.append('"headers"') %}{% endif %}
+{% if token_cookie %}{% do token_locations.append('"cookies"') %}{% endif %}
+{% if token_locations | length == 0 %}{% do token_locations.append('"headers"') %}{% endif %}
+from datetime import timedelta
+{% endif %}
 import os
 from dotenv import load_dotenv
-{# from datetime import timedelta #}
 
+# Charge les variables d’environnement définies dans le fichier .env
+# afin de ne pas stocker les informations sensibles (mots de passe, clés secrètes, URLs)
+# directement dans le code source.
 load_dotenv()
-
 
 class Config:
 
     # API Flask
     API_KEY = os.getenv("API_KEY") or "api_key" 
     SECRET_KEY = os.getenv("SECRET_KEY") or "secret_key"
-    JWT_SECRET = os.getenv("JWT_SECRET") or "jwt_secret"
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY") or os.getenv("JWT_SECRET") or "jwt_secret"
 
-
-    {% if session %}
+    {% if use_session %}
     # Configuration Session
     SESSION_TYPE = "filesystem"
     SESSION_PERMANENT = False
@@ -22,29 +39,23 @@ class Config:
     SESSION_FILE_THRESHOLD = 500
     {% endif %}
 
-
-
-
-    {% if jwt %}
+    {% if use_jwt %}
     {# Configuration JWT #}
     # Ceci ne concerne que l'extension JWT_EXTENDED
-    # Supprimer vous n'en avez pas besoin
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
-    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=7)
-    JWT_TOKEN_LOCATION = ["cookies"]
-    JWT_COOKIE_SECURE = False  # Mettre True en production
-    JWT_COOKIE_SAMESITE = "Lax"
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes={{ access_token | default(15, true) }})
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days={{ refresh_token | default(7, true) }})
+    JWT_TOKEN_LOCATION = [{{ token_locations | join(", ") }}]
+    JWT_COOKIE_SECURE = {{ 'True' if cookie_secure else 'False' }}  # Mettre True en production
+    JWT_COOKIE_HTTPONLY = {{ 'True' if cookie_httponly else 'False' }}
+    JWT_COOKIE_SAMESITE = "{{ same_site | default('Lax', true) }}"
     JWT_COOKIE_CSRF_PROTECT = False
     JWT_ACCESS_COOKIE_PATH = "/"
     JWT_REFRESH_COOKIE_PATH = "/token/refresh"
     {% endif %}
 
-    # Configuration Session
+    {# Configuration Session
     #PERMANENT_SESSION_LIFETIME = timedelta(days=1)
     #SESSION_COOKIE_SECURE = False  # Mettre True en production
     #SESSION_COOKIE_HTTPONLY = True
-    #SESSION_COOKIE_SAMESITE = "Lax"
-
-
-
+    #SESSION_COOKIE_SAMESITE = "Lax"#}
 # Fichier créé par {{ nom }} 

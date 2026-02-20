@@ -19,7 +19,7 @@ const TabLien = () => {
 
   return (
     <div
-    className={"aff-myn-none aff-flex mb-8"}
+    className={"aff-myn-none aff-flex mb-8 overx-auto"}
       style={{
         position: "relative",
         gap: "1.5rem",

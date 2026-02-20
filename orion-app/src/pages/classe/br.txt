@@ -1,0 +1,68 @@
+  <AnimatePresence mode="wait">
+          {jwtSession ? (
+            <motion.div
+              className="mh-2"
+              initial={{ opacity: 0, y: 200 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 200 }}
+              transition={{ duration: 0.4, ease: "easeIn" }}
+            >
+              <div className="aff-flex ai-mil gap-3">
+                <h3>Configuration Token </h3>
+                <SettingsIcon size={20} />
+              </div>
+              <div className="aff-flex fd-col">
+                <div className="aff-flex jc-sb ai-mil mb-1">
+                  <span>Acces Token Expiry</span>
+                  <Selecteur
+                    onChange={(e) => setProjetId(Number(e.target.value))}
+                    className={"bloc-myn-3 bloc-5"}
+                    style={style2}
+                  >
+                    <option className="taille-pt" value="">
+                      Choisir un temps
+                    </option>
+
+                    <option value={15}>15 mintues</option>
+                    <option value={20}>20 mintues</option>
+                    <option value={35}>35 mintues</option>
+                    <option value={45}>45 mintues</option>
+                  </Selecteur>
+                </div>
+
+                <div className="aff-flex jc-sb ai-mil mb-1">
+                  <span>Refresh Token Expiry</span>
+                  <Selecteur
+                    onChange={(e) => setProjetId(Number(e.target.value))}
+                    className={"bloc-myn-3 bloc-5"}
+                    style={style2}
+                  >
+                    <option className="taille-pt" value="">
+                      Choisir un temps
+                    </option>
+
+                    <option value={15}>15 jours</option>
+                    <option value={20}>20 jours</option>
+                    <option value={35}>35 jours</option>
+                    <option value={45}>45 jours</option>
+                  </Selecteur>
+                </div>
+
+                 <div className="aff-flex jc-sb ai-mil ">
+                  <span>Token Location</span>
+                  <div className="aff-flex ai-mil gap-2">
+                    <div className="test gap-2 aff-flex">
+                      <label htmlFor="checkHeaders">Headers</label>
+                       <input type="checkbox" name="" id="" />
+                    </div>
+                   
+                    <div className="test gap-2 aff-flex">
+                      <label htmlFor="checkHeaders">Cookie</label>
+                       <input type="checkbox" name="" id="" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>

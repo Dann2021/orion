@@ -2,9 +2,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   ActivityIcon,
   Braces,
-  CheckCircle2Icon,
+  CircleAlert,
   Download,
   HelpCircleIcon,
+  SettingsIcon
 } from "lucide-react";
 import { useState } from "react";
 import { baseProjet, baseUrl } from "../../api/api";
@@ -14,7 +15,18 @@ import JsonEditor from "../../composants/JsonEditor";
 import Selecteur from "../../composants/Selecteur";
 import useDataGet from "../../hooks/useDataGet";
 import useDataPost from "../../hooks/useDataPost";
-import { DATABASES, modeleJson, style, style2 } from "./constantes";
+import {
+  ACCESS_TOKEN_EXPIRY_OPTIONS,
+  DATABASES,
+  modeleBaseJwt,
+  modeleJson,
+  REFRESH_TOKEN_EXPIRY_OPTIONS,
+  SAME_SITE_OPTIONS,
+  style,
+  style2,
+} from "./constantes";
+import CardDatabase from "./elements/CardDatabase";
+import TagModele from "./elements/TagModele";
 
 // ================= COMPONENT =================
 export default function Classe() {
@@ -34,6 +46,8 @@ export default function Classe() {
 
   // ==========  State pour selectionner une base de donnée ============
   const [selectedDb, setSelectedDb] = useState("sqlite");
+
+ 
 
   // ============== STATE pour configuration de la base de donnée ==============
   const [dbConfig, setDbConfig] = useState({
@@ -78,8 +92,18 @@ export default function Classe() {
         type: selectedDb,
         ...dbConfig,
       },
-      session: activeSession,
-      jwt: jwtSession
+
+      auth: activeSession
+        ? { type: "session" }
+        : jwtSession
+          ? { type: "jwt", classe: modeleBaseJwt, configJwt: {
+            access_token: accesToken,
+            refresh_token: refreshToken,
+            same_site: sameSite,
+            token_storage: tokenStorage,
+            jwt_security: jwtSecurity
+          } }
+          : null,
     };
 
     // console.log("Données envoyées au backend :", dataSend);
@@ -113,10 +137,42 @@ export default function Classe() {
     setActiveSession(!activeSession);
   };
 
-
   // ================ State pour les jwt ==================
-  const [jwtSession, setJwtSession] = useState(false)
-  const toggleJwtSession = () => setJwtSession(!jwtSession)
+  const [jwtSession, setJwtSession] = useState(false);
+  const toggleJwtSession = () => setJwtSession(!jwtSession);
+
+  // configuration supplémentaire jwt
+  const [accesToken, setAccesToken] = useState(null)
+  const [refreshToken, setRefreshToken] = useState(null)
+  const [sameSite, setSameSite] = useState(null)
+
+  const [jwtSecurity, setJwtSecurity] = useState({
+    secure: false,
+    httponly:true
+  })
+
+  const [tokenStorage, setTokenStorage] = useState({
+    headers: true,
+    cookie: false
+  })
+
+  const handleJwtSecurity = (e) => {
+  const { name, checked } = e.target;
+  setJwtSecurity((prev) => ({
+    ...prev,
+    [name]: checked
+  }));
+};
+
+ const handleTokenStorageChange = (e) => {
+  const { name, checked } = e.target;
+  setTokenStorage((prev) => ({
+    ...prev,
+    [name]: checked
+  }));
+};
+
+
 
   return (
     <Col className="gap-5">
@@ -156,6 +212,7 @@ export default function Classe() {
       <Card style={style} className="ronde-1 p-2 bloc-myn-10">
         <Card.Corps className="m-5 aff-flex ai-mil fd-col gap-5">
           <Braces size={50} className="couleur-rouge-cerise" />
+        
 
           <AnimatePresence>
             <motion.div layout className="aff-flex jc-mil fw-wrap gap-3">
@@ -168,10 +225,12 @@ export default function Classe() {
                   initial={{ opacity: 0, scale: 0.6 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.6 }}
-                  whileHover={{ scale: 1.1 }}
+                  whileHover={{ scale: 1.01 }}
                   transition={{ duration: 0.25 }}
+                  
                 />
               ))}
+              
             </motion.div>
           </AnimatePresence>
         </Card.Corps>
@@ -202,6 +261,126 @@ export default function Classe() {
             />
           </div>
         </div>
+        {/** Ajout d'une configuration pour les jwt */}
+        <AnimatePresence mode="wait">
+          {jwtSession ? (
+            <motion.div
+              className="mh-2 p-1 ronde-1 token-card"
+              //style={{ background: "var(--bg-main)"}}
+              initial={{ opacity: 0, y: 200 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 200 }}
+              transition={{ duration: 0.4, ease: "easeIn" }}
+            >
+              <div className="aff-flex ai-mil gap-3">
+                <h3>Configuration Token </h3>
+                <SettingsIcon size={20} />
+              </div>
+              <div className="aff-flex fd-col fd-myn-ligne jc-myn-sb p-1">
+                <div className="aff-flex fd-col mh-1 gap-3 p-1">
+                  <div className="aff-flex ai-mil gap-2">
+                    <h4>Acces Token Expiry</h4>
+                    <CircleAlert size={20} />
+                  </div>
+                  <Selecteur
+                  value={accesToken || ""}
+                    onChange={(e) => setAccesToken(e.target.value)}
+                    className={"bloc-12"}
+                    style={style2}
+                  >
+                    <option className="taille-pt" value="">
+                      Choisir une durée
+                    </option>
+                    {ACCESS_TOKEN_EXPIRY_OPTIONS.map((element) => (
+                      <option key={element.id} value={element.value}>
+                        {element.label}
+                      </option>
+                    ))}
+                  </Selecteur>
+                  <div className="aff-flex fd-col mh-1 gap-2">
+                    <h4>Token Storage</h4>
+                    <div className="aff-flex fd-col gap-2">
+                      <div className="gap-2 aff-flex">
+                        <input type="checkbox" name="headers" checked={tokenStorage.headers} onChange={handleTokenStorageChange} />
+                        <label htmlFor="checkHeaders" className="te-noir">
+                          Headers
+                        </label>
+                      </div>
+
+                      <div className="gap-2 aff-flex">
+                        <input type="checkbox" name="cookie" checked={tokenStorage.cookie} onChange={handleTokenStorageChange} />
+                        <label htmlFor="checkHeaders" className="te-noir">
+                          Cookie (HTTP Only)
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="aff-flex fd-col mh-1 gap-3 p-1">
+                  <div className="aff-flex ai-mil gap-2">
+                    <h4>Refresh Token Expiry</h4>
+                    <CircleAlert size={20} />
+                  </div>
+
+                  <Selecteur
+                  value={refreshToken || ""}
+                    onChange={(e) => setRefreshToken(e.target.value)}
+                    className={"bloc-12"}
+                    style={style2}
+                  >
+                    <option className="taille-pt" value="">
+                      Choisir une durée
+                    </option>
+
+                    {REFRESH_TOKEN_EXPIRY_OPTIONS.map((element) => (
+                      <option key={element.id} value={element.value}>
+                        {element.label}
+                      </option>
+                    ))}
+                  </Selecteur>
+
+                  <div className="aff-flex fd-col mh-1 gap-2">
+                    <div className="aff-flex fd-col">
+                      <div className="gap-2 aff-flex">
+                        <input type="checkbox" name="httponly" checked={jwtSecurity.httponly} onChange={handleJwtSecurity} />
+                        <label htmlFor="checkHeaders" className="te-noir">
+                          HttpOnly
+                        </label>
+                      </div>
+
+                      <div className="gap-2 aff-flex">
+                        <input type="checkbox" name="secure" checked={jwtSecurity.secure} onChange={handleJwtSecurity} />
+                        <label htmlFor="checkHeaders" className="te-noir">
+                          Secure
+                        </label>
+                      </div>
+                      <div className="gap-2 aff-flex ai-mil">
+                        <span>SameSite</span>
+                        <Selecteur
+                        value={sameSite || ""}
+                          onChange={(e) => setSameSite(e.target.value)}
+                          className={"bloc-12"}
+                          style={style2}
+                        >
+                          <option className="taille-pt" value="">
+                            Choisir une option
+                          </option>
+
+                          {SAME_SITE_OPTIONS.map((element) => (
+                            <option key={element.id} value={element.value}>
+                              {element.label}
+                            </option>
+                          ))}
+                        </Selecteur>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
       </Bloc>
 
       {/** CARD DE CHOIX  POUR BASE DE DONNée */}
@@ -210,6 +389,7 @@ export default function Classe() {
         <Ligne className={"jc-mil p-1 mb-2"}>
           {DATABASES.map((db) => (
             <CardDatabase
+            style={style2}
               key={db.id}
               icone={db.icone}
               label={db.label}
@@ -354,46 +534,6 @@ export default function Classe() {
   );
 }
 
-// eslint-disable-next-line no-unused-vars
-const TagModele = ({ nom, as: Component = "div", ...props }) => {
-  return (
-    <Component
-      {...props}
-      className="aff-flex jc-sb gap-1 survol curseur-pointeur"
-    >
-      <pre className="tag">
-        <span className="tag-dot-2"></span>
-        <code>{nom}</code>
-      </pre>
-    </Component>
-  );
-};
 
-const CardDatabase = ({
-  icone: Icone,
-  label,
-  commande,
-  description,
-  onClick,
-  className = "",
-}) => {
-  return (
-    <Card
-      className={"bloc-myn-3 bloc-pt-4 curseur-pointeur survol " + className}
-      style={style2}
-      onClick={onClick}
-    >
-      <Card.Header className={"aff-flex ai-mil gap-3 mb-2"}>
-        {Icone && <Icone size={20} />}
-        <h4 className="fira"> {label}</h4>
-      </Card.Header>
-      <Card.Corps className={"mb-1"}>
-        <h5 className="fira">{commande}</h5>
-      </Card.Corps>
-      <Card.Bas className={"aff-flex ai-mil gap-2"}>
-        <CheckCircle2Icon size={16} />
-        <p className="taille-pt">{description}</p>
-      </Card.Bas>
-    </Card>
-  );
-};
+
+

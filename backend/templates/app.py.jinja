@@ -1,44 +1,47 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
 from flask_cors import CORS
-from extensions import bcrypt, jwt
+from extensions import bcrypt
 from erreurs.handle_erreurs import enregistreur_erreur
 from database import Base, engine
+{% if use_jwt %}
+from extensions import jwt
+{% endif %}
+
 {% for bp in blueprints %}
 from routes.{{ bp.nom }} import {{ bp.bp }}
 {% endfor %}
 
-{% if session %}
+{% if use_session %}
 from flask_session import Session
 {% endif %}
 
-# =========================
+
 # Création de l'application
-# =========================
 app = Flask(__name__)
 
-# =========================
+
 # Chargement de la configuration
-# =========================
 from config import Config
 app.config.from_object(Config)
 
 # Clé secrète (sessions, cookies, signer)
 app.secret_key = Config.SECRET_KEY
 
-# =========================
-# Initialisation des extensions
-# =========================
-bcrypt.init_app(app)
-jwt.init_app(app)
 
-{% if session %}
+# Initialisation des extensions
+bcrypt.init_app(app)
+{% if use_jwt %}
+jwt.init_app(app)
+{% endif %}
+
+
+{% if use_session %}
 # Sessions serveur-side (Flask-Session)
 Session(app)
 {% endif %}
 
-# =========================
+
 # Middlewares
-# =========================
 CORS(
     app,
     origins="*",
@@ -46,37 +49,32 @@ CORS(
     allow_headers=["Content-Type", "Authorization"],
 )
 
-# =========================
+
 # Enregistrement des blueprints
-# =========================
 {% for bp in blueprints %}
 app.register_blueprint({{ bp.bp }})
 {% endfor %}
 
-# =========================
+
 # Gestion des erreurs
-# =========================
 enregistreur_erreur(app)
 
-# =========================
 # Initialisation de la base de données
-# =========================
 try:
     Base.metadata.create_all(bind=engine)
     print("✅ Base de données connectée et tables créées")
 except Exception as ex:
     print("❌ Erreur de base de données :", ex)
 
-# =========================
+
 # Routes globales
-# =========================
 @app.route("/")
 def hello():
-    return jsonify({"message": "Hello bienvenue dans mon api"}), 200
+    return render_template("index.html")
 
-# =========================
+
+
 # Lancement de l'application
-# =========================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)
 

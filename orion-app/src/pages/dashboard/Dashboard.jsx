@@ -55,7 +55,7 @@ export default function Dashboard() {
   };
 
   return (
-    <Col className={"gap-5 bloc-myn-11"}>
+    <Col className={"gap-5 bloc-myn-12"}>
       <h1 className="inter">Dashboard</h1>
 
       <h3 style={{ color: "var(--text-muted)" }}>Créez un nouveau projet</h3>

@@ -1,0 +1,33 @@
+from werkzeug.exceptions import HTTPException
+from flask import jsonify
+
+
+# creation d'un ecouteur d'erreur globale pour toute l'application
+def enregistreur_erreur(app):
+
+    @app.errorhandler(HTTPException)
+    def erreur_client(e):
+        messages_erreurs = {
+            400: "Mauvaise requete",
+            401: "Authentification invalide",
+            403: "Accès refusé",
+            404: "Ressource introuvable",
+        }
+        message = getattr(e, "description", None)
+        if not message or message == e.name:
+            message = messages_erreurs.get(e.code, "Erreur HTTP")
+
+        return (
+            jsonify(
+                {
+                    "erreur": e.name,
+                    "message": message,
+                    "statut": e.code,
+                }
+            ),
+            e.code,
+        )
+
+
+
+# Projet généré par Dann Sloann

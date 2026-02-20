@@ -1,6 +1,5 @@
 from flask import Blueprint, jsonify, request
 from modeles.models import Projet, Data
-
 from database import get_db
 from core import (
     generateur,
@@ -20,8 +19,6 @@ projet_bp = Blueprint("projets", __name__, url_prefix="/api/projets")
 
 # creation  d'un CRUD
 # Fonction de génération du backend pour un projet donné
-
-
 def fabrique_database_url(db):
     if db["type"] == "sqlite":
         return "sqlite:///database.db"
@@ -45,7 +42,9 @@ def fabrique_database_url(db):
         )
 
 
-def generate_backend_for_projet(projet_id, raw_schema, base_de_donnees, session, jwt):
+def generate_backend_for_projet(
+    projet_id, raw_schema, base_de_donnees, auth, classe_jwt
+):
 
     # ⚠️ garder la session ouverte pendant TOUTE l'utilisation ORM
     with get_db() as session_db:
@@ -63,6 +62,8 @@ def generate_backend_for_projet(projet_id, raw_schema, base_de_donnees, session,
         erreurs_path = ensure_dir(f"{base_path}/erreurs")
         utils_path = ensure_dir(f"{base_path}/utils")
         schemas_path = ensure_dir(f"{base_path}/schemas")
+        style_path = ensure_dir(f"{base_path}/static/css")
+        template_path = ensure_dir(f"{base_path}/templates")
 
         # Construction des modèles depuis la DB
 
@@ -78,12 +79,22 @@ def generate_backend_for_projet(projet_id, raw_schema, base_de_donnees, session,
 
     # 1️⃣ models.py (liste de modèles)
     relations = normalize_relations(models=schemas)
+
+    # Génération d'un simple fichier pour la route du modele User du jwt
+    # classe_jwt = auth.get("classe")
+
+    # On normalise les types
+    classe_pour_jwt = parseur_modele(schema=classe_jwt, type_mapping=TYPE_MAPPING)
+
     generateur(
         template_name="modele.py.jinja",
         contexte={
-            "models": schemas,
+            "models": schemas,  # ici on choisit tous les autres modeles sauf le premier
+            "model_base": classe_pour_jwt,  # ici on choisit le premier modele pour qu'il soit celui de l'auth
             "type_utilises": types_utilises,
             "relations": relations,
+            "auth_type_jwt": auth.get("type") == "jwt",
+            # "model_auth": auth.get("classe"),
         },
         chemin_sortie=modeles_path,
         nom_fichier="models.py",
@@ -94,17 +105,43 @@ def generate_backend_for_projet(projet_id, raw_schema, base_de_donnees, session,
     # 2️⃣ routes CRUD (1 modèle à la fois)
 
     for model in schemas:
+
+        model_source_relations = [
+            rel for rel in relations if rel["source"] == model["nom"]
+        ]
+
+        # Relations qui ciblent ce modèle
+        model_cible_relations = [
+            rel for rel in relations if rel["cible"] == model["nom"]
+        ]
+
+        # Relation liée au JWT (s'il y en a une)
+        jwt_relation = None
+        if auth.get("type") == "jwt":
+            jwt_relation = next((rel for rel in model_cible_relations), None)
+
         generateur(
             template_name="route_api.py.jinja",
             contexte={
                 "model": model,
-                "relations": model.get("relations", []),
-                "session": session,
-                "jwt": jwt,
+                "relations_cible": model_cible_relations,
+                "auth": auth,
+                "model_auth_name": auth.get("classe"),
+                "use_session": auth.get("type") == "session",
+                "use_jwt": auth.get("type") == "jwt",
+                "jwt_relation": jwt_relation,
+                "relations_source": model_source_relations,
             },
             chemin_sortie=routes_path,
             nom_fichier=f"{model['nom'].lower()}.py",
         )
+
+    generateur(
+        template_name="route_api.py.jinja",
+        contexte={"model": classe_pour_jwt},
+        chemin_sortie=routes_path,
+        nom_fichier=f"{classe_pour_jwt['nom'].lower()}.py",
+    )
 
     # 3️⃣ app.py + blueprints
     blueprints = []
@@ -114,9 +151,24 @@ def generate_backend_for_projet(projet_id, raw_schema, base_de_donnees, session,
             {"nom": model["nom"].lower(), "bp": fabrique_blueprint(model)}
         )
 
+    # fabrique blueprint pour la classe jwt
+
+    blueprints.append(
+        {
+            "nom": classe_pour_jwt["nom"].lower(),
+            "bp": fabrique_blueprint(classe_pour_jwt),
+        }
+    )
+
     generateur(
         template_name="app.py.jinja",
-        contexte={"blueprints": blueprints, "nom": projet.auteur, "session": session},
+        contexte={
+            "blueprints": blueprints,
+            "nom": projet.auteur,
+            "auth": auth,
+            "use_session": auth.get("type") == "session",
+            "use_jwt": auth.get("type") == "jwt",
+        },
         chemin_sortie=base_path,
         nom_fichier="app.py",
     )
@@ -142,7 +194,12 @@ def generate_backend_for_projet(projet_id, raw_schema, base_de_donnees, session,
     ]:
         generateur(
             template_name=tpl,
-            contexte={"nom": projet.auteur},  # ✅ volontairement vide
+            contexte={
+                "nom": projet.auteur,
+                "auth": auth,
+                "use_session": auth.get("type") == "session",
+                "use_jwt": auth.get("type") == "jwt",
+            },  # ✅ volontairement vide
             chemin_sortie=base_path,
             nom_fichier=fname,
         )
@@ -152,7 +209,10 @@ def generate_backend_for_projet(projet_id, raw_schema, base_de_donnees, session,
         template_name="config.py.jinja",
         contexte={
             "nom": projet.auteur,
-            "session": session,
+            "auth": auth,
+            "use_session": auth.get("type") == "session",
+            "use_jwt": auth.get("type") == "jwt",
+            "config_jwt": auth.get("configJwt"),
         },
         chemin_sortie=base_path,
         nom_fichier="config.py",
@@ -177,6 +237,38 @@ def generate_backend_for_projet(projet_id, raw_schema, base_de_donnees, session,
         nom_fichier="utils.py",
     )
 
+    # generation de la documentation (index + css)
+    generateur(
+        template_name="flexible.css.jinja",
+        contexte={},
+        chemin_sortie=style_path,
+        nom_fichier="flexible.css",
+    )
+    generateur(
+        template_name="theme.css.jinja",
+        contexte={},
+        chemin_sortie=style_path,
+        nom_fichier="theme.css",
+    )
+    generateur(
+        template_name="index.css.jinja",
+        contexte={},
+        chemin_sortie=style_path,
+        nom_fichier="index.css",
+    )
+    generateur(
+        template_name="index.html.jinja",
+        contexte={
+            "project_name": projet.nom,
+            "author": projet.auteur,
+            "models": schemas,
+            "relations": relations,
+            "auth": auth,
+        },
+        chemin_sortie=template_path,
+        nom_fichier="index.html",
+    )
+
     # generation du fichier schema.py
     for model in schemas:
         generateur(
@@ -188,6 +280,14 @@ def generate_backend_for_projet(projet_id, raw_schema, base_de_donnees, session,
             chemin_sortie=schemas_path,
             nom_fichier=f"{model['nom'].lower()}_schema.py",
         )
+
+    # Génération de schéma pour le model User
+    generateur(
+        template_name="schema.py.jinja",
+        contexte={"model": classe_pour_jwt, "auteur": projet.auteur},
+        chemin_sortie=schemas_path,
+        nom_fichier=f"{classe_pour_jwt['nom'].lower()}_schema.py",
+    )
 
 
 # Creation de l'élément
@@ -225,11 +325,11 @@ def c_projet():
 @projet_bp.post("/generate/<int:projet_id>")
 def generate(projet_id):
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         modele = data.get("modele")
         base_de_donnees = data.get("databaseConfig")
-        session = data.get("session")
-        jwt = data.get("jwt")
+        auth = data.get("auth") or {}
+        classe_jwt = auth.get("classe") or {}
 
         if not modele or not base_de_donnees:
             return jsonify({"error": "modele ou databaseConfig manquant"}), 400
@@ -259,11 +359,14 @@ def generate(projet_id):
             projet_id,
             raw_schema=modele,
             base_de_donnees=base_de_donnees,
-            session=session,
-            jwt=jwt,
+            auth=auth,
+            classe_jwt=classe_jwt,
         )
         return jsonify({"message": "Backend généré avec succès"}), 200
     except Exception as e:
+        import traceback
+
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 

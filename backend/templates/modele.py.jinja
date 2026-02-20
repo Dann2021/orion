@@ -1,14 +1,33 @@
-# Projet final pour utiliser dans mon app
-# creation des modeles pour la base de données
+{# Projet final pour utiliser dans mon app #}
+{# creation des modeles pour la base de données #}
 from sqlalchemy import Column, ForeignKey, {{ type_utilises | join(", ")  }}
-{# from sqlalchemy import Column,, Integer{% if type_utilises %}, {{ type_utilises | join(", ") }}{% endif %} # ici je choisis d'importer directement Integer comme on le retrouve dans les id #}
 from sqlalchemy.orm import relationship 
 from database import Base 
 
+{# Récupération du auth_type et model_auth pour créer un User si le model_auth n'est pas vrai #}
+{% if auth_type_jwt and model_base %}
+{% set tablename = model_base.nom | lower ~ "s"%}
+class {{ model_base.nom }}(Base):
+
+    # nom de la table dans la base de donnée
+    __tablename__ = "{{ tablename }}"
+
+    {# creation des attributs #}
+    id = Column(Integer, primary_key=True, index=True)
+   {% for attr in model_base.attributs %}
+    {{ attr.nom }} = Column({{ attr.type }}{% if attr.primary_key is defined %}, primary_key={{ attr.primary_key | lower | capitalize }}{% endif %}{% if attr.nullable is defined %}, nullable={{ attr.nullable | lower | capitalize }}{% endif %}{% if attr.unique is defined %}, unique={{ attr.unique | lower | capitalize }}{% endif %}{% if attr.index is defined %}, index={{ attr.index | lower | capitalize }}{% endif %}{% if attr.default is defined %}, default="{{ attr.default | lower  }}"{% endif %})
+{% endfor %}
+
+    {% for model in models %}
+        {% if model.protege | default(false) and model.nom != "User" %}
+    # Relation vers d'autres classes
+    {{ model.nom | lower }}s = relationship("{{ model.nom }}", back_populates="user")
+        {% endif %}
+    {% endfor %}
+{% endif %} 
 
 {% for model in models %}
 {# ici on cree des variables pour faciliter la generation du code #}
-
 {% set nomClasseMin = model.nom.lower() %}
 {% set nomClasse = model.nom.capitalize() %}
 {% set tablename = nomClasseMin ~ "s" %}
@@ -23,11 +42,12 @@ class {{ nomClasse }}(Base):
     {{ attr.nom }} = Column({{ attr.type }}{% if attr.primary_key is defined %}, primary_key={{ attr.primary_key | lower | capitalize }}{% endif %}{% if attr.nullable is defined %}, nullable={{ attr.nullable | lower | capitalize }}{% endif %}{% if attr.unique is defined %}, unique={{ attr.unique | lower | capitalize }}{% endif %}{% if attr.index is defined %}, index={{ attr.index | lower | capitalize }}{% endif %}{% if attr.default is defined %}, default="{{ attr.default | lower  }}"{% endif %})
 {% endfor %}
 
+
+{% if relations  %}
     # relations
-{% if relations | length > 0 %}
     {% for rel in relations %}
     {% if rel.type == "one_to_many" and rel.source == nomClasse %}
-    {{ rel.champ }} = relationship("{{ rel.cible }}",back_populates="{{ rel.attribut_inverse }}", cascade="all, delete-orphan") 
+    {{ rel.champ }} = relationship("{{ rel.cible }}", back_populates="{{ rel.attribut_inverse }}", cascade="all, delete-orphan") 
     {% endif %}
     {% if rel.type == "one_to_many" and rel.cible == nomClasse %}
     {# creation d'une variable attribut inverse pour stocker directement la valeur #}
@@ -35,29 +55,17 @@ class {{ nomClasse }}(Base):
     {% set attribut_inverse_id = rel.attribut_inverse ~ "_id" %}
     {% set attribut_inverse = rel.attribut_inverse %}
     {% set sources = rel.source ~ "s"%}
-    {%set source = rel.source %}
-    {{ attribut_inverse_id }} = Column(Integer,ForeignKey("{{ (sources) | lower }}.id"), nullable={{ rel.nullable | lower | capitalize }})
+    {% set source = rel.source %}
+    {{ attribut_inverse_id }} = Column(Integer, ForeignKey("{{ (sources) | lower }}.id"), nullable={{ rel.nullable | lower | capitalize }})
     {{ attribut_inverse }} = relationship("{{ source }}", back_populates="{{ rel.champ }}")
     {% endif %} 
     {% endfor %}
-{% else %}
-    # pas de relation 
 {% endif %}
-
-    {# A enlever #}
-    {# donnees à voir
-    def data_{{ nomClasseMin }}(self):
-        return {
-            "id": self.id,
-    {% for elemnt in model.attributs %}
-            "{{ elemnt.nom }}": self.{{ elemnt.nom }},
-    {% endfor %}
-    }
-
-    # pour plusieurs {{ nomClasseMin }}s
-    @staticmethod
-    def list_data(items):
-        return [item.data_{{ nomClasseMin }}() for item in items] #}
+{% if auth_type_jwt and model.protege is defined and model.protege and model.nom != "User" %}
+    # relation vers User
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user = relationship("User")
+{% endif %}   
 {% endfor %}
 
 

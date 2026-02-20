@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/static/css/index.css" />
+  <title>app-libre · API Docs</title>
+</head>
+
+<body class="conteneur py-5">
+  <section class="col gap-5 ai-mil">
+    <div class="bloc-12 bloc-myn-9 db-card my-3 w-full p-1">
+      <div class="pill">
+        <h3 class="orion-title">Orion - API Docs</h3>
+      </div>
+
+      <div class="tag mh-3">
+        <h3>app-libre</h3>
+      </div>
+      <p class="my-5">
+        Documentation auto-generee pour votre backend Flask / SQLAlchemy.
+        Toutes les routes CRUD et relations sont listees ci-dessous.
+      </p>
+      <div class="aff-flex fd-col fd-myn-ligne fd-pt-ligne jc-sb gap-5">
+        <div class="bloc-12 bloc-myn-3 bloc-pt-3 db-card">
+          <h4 class="mb-1">Base URL</h4>
+          <span style="background: var(--bg-surface-2)" class="p-1 ronde-1 code-key">/</span>
+        </div>
+        <div class="bloc-12 bloc-myn-3 bloc-pt-3 db-card">
+          <h4 class="mb-1">API Prefix</h4>
+          <span style="background: var(--bg-surface-2)" class="p-1 ronde-1 code-key">/api</span>
+        </div>
+        <div class="bloc-12 bloc-myn-3 bloc-pt-3 db-card">
+          <h4 class="mb-1">Auth</h4>
+          <div class="p-1 ronde-1 code-key auth-value" style="background: var(--bg-surface-2)">
+            <code>
+                  jwt
+              </code>
+          </div>
+        </div>
+
+        <div class="bloc-12 bloc-myn-3 bloc-pt-3 db-card">
+          <h4 class="mb-1">Models</h4>
+          <div style="background: var(--bg-surface-2)" class="p-1 ronde-1 code-key">
+            <code>3</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bloc-12 bloc-myn-9 db-card my-3 w-full">
+      <h2>Quick Start</h2>
+      <div class="bloc-12 bloc-myn-7 mh-1">
+        <pre class="code-key">curl -X GET http://localhost:5000/api/users</pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="col gap-5 ai-mil">
+    <div class="bloc-12 bloc-myn-9 endpoint-card my-3 w-full p-1">
+      <h2>Endpoints</h2>
+      <div class="aff-flex fd-col gap-5 mh-4 h-5 overy-auto">
+        <div class="mh-2">
+          <h4>User</h4>
+          <div class="endpoint">
+            <span class="mb-1 http-method http-get">GET</span>
+            <code style="background: var(--bg-surface)" class="p-1 ronde-1">/api/users</code>
+            <span>Lister toutes les ressources</span>
+          </div>
+
+          <div class="endpoint">
+            <span class="mb-1 http-method http-post">POST</span>
+            <code style="background: var(--bg-surface)" class="p-1 ronde-1">/api/users</code>
+            <span>Creer une ressource</span>
+          </div>
+
+          <div class="endpoint">
+            <span class="mb-1 http-method http-get">GET</span>
+            <code style="background: var(--bg-surface)"
+              class="p-1 ronde-1">/api/users/&lt;id&gt;</code>
+            <span>Recuperer une ressource</span>
+          </div>
+
+          <div class="endpoint">
+            <span class="mb-1 http-method http-put">PUT</span>
+            <code style="background: var(--bg-surface)"
+              class="p-1 ronde-1">/api/users/&lt;id&gt;</code>
+            <span>Mettre a jour une ressource</span>
+          </div>
+
+          <div class="endpoint">
+            <span class="mb-1 http-method http-delete">DELETE</span>
+            <code style="background: var(--bg-surface)"
+              class="p-1 ronde-1">/api/users/&lt;id&gt;</code>
+            <span>Supprimer une ressource</span>
+          </div>
+          <div class="query-info">
+            <div class="query-label">Query params:</div>
+            <div class="query-list">
+              <span class="chip">limit</span>
+              <span class="chip">offset</span>
+            </div>
+          </div>
+        </div>
+        <div class="mh-2">
+          <h4>Utilisateur</h4>
+          <div class="endpoint">
+            <span class="mb-1 http-method http-get">GET</span>
+            <code style="background: var(--bg-surface)" class="p-1 ronde-1">/api/utilisateurs</code>
+            <span>Lister toutes les ressources</span>
+          </div>
+
+          <div class="endpoint">
+            <span class="mb-1 http-method http-post">POST</span>
+            <code style="background: var(--bg-surface)" class="p-1 ronde-1">/api/utilisateurs</code>
+            <span>Creer une ressource</span>
+          </div>
+
+          <div class="endpoint">
+            <span class="mb-1 http-method http-get">GET</span>
+            <code style="background: var(--bg-surface)"
+              class="p-1 ronde-1">/api/utilisateurs/&lt;id&gt;</code>
+            <span>Recuperer une ressource</span>
+          </div>
+
+          <div class="endpoint">
+            <span class="mb-1 http-method http-put">PUT</span>
+            <code style="background: var(--bg-surface)"
+              class="p-1 ronde-1">/api/utilisateurs/&lt;id&gt;</code>
+            <span>Mettre a jour une ressource</span>
+          </div>
+
+          <div class="endpoint">
+            <span class="mb-1 http-method http-delete">DELETE</span>
+            <code style="background: var(--bg-surface)"
+              class="p-1 ronde-1">/api/utilisateurs/&lt;id&gt;</code>
+            <span>Supprimer une ressource</span>
+          </div>
+          <div class="query-info">
+            <div class="query-label">Query params:</div>
+            <div class="query-list">
+              <span class="chip">limit</span>
+              <span class="chip">offset</span>
+              <span class="chip">nom</span>
+              <span class="chip">email</span>
+              <span class="chip">role</span>
+            </div>
+          </div>
+        </div>
+        <div class="mh-2">
+          <h4>Publication</h4>
+          <div class="endpoint">
+            <span class="mb-1 http-method http-get">GET</span>
+            <code style="background: var(--bg-surface)" class="p-1 ronde-1">/api/publications</code>
+            <span>Lister toutes les ressources</span>
+          </div>
+
+          <div class="endpoint">
+            <span class="mb-1 http-method http-post">POST</span>
+            <code style="background: var(--bg-surface)" class="p-1 ronde-1">/api/publications</code>
+            <span>Creer une ressource</span>
+          </div>
+
+          <div class="endpoint">
+            <span class="mb-1 http-method http-get">GET</span>
+            <code style="background: var(--bg-surface)"
+              class="p-1 ronde-1">/api/publications/&lt;id&gt;</code>
+            <span>Recuperer une ressource</span>
+          </div>
+
+          <div class="endpoint">
+            <span class="mb-1 http-method http-put">PUT</span>
+            <code style="background: var(--bg-surface)"
+              class="p-1 ronde-1">/api/publications/&lt;id&gt;</code>
+            <span>Mettre a jour une ressource</span>
+          </div>
+
+          <div class="endpoint">
+            <span class="mb-1 http-method http-delete">DELETE</span>
+            <code style="background: var(--bg-surface)"
+              class="p-1 ronde-1">/api/publications/&lt;id&gt;</code>
+            <span>Supprimer une ressource</span>
+          </div>
+          <div class="query-info">
+            <div class="query-label">Query params:</div>
+            <div class="query-list">
+              <span class="chip">limit</span>
+              <span class="chip">offset</span>
+              <span class="chip">titre</span>
+              <span class="chip">contenu</span>
+              <span class="chip">date_creation</span>
+              <span class="chip">is_public</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bloc-12 bloc-myn-9 endpoint-card my-3 w-full p-1">
+      <div class="aff-flex fd-col gap-5 mh-4">
+        <h4>Relations</h4>
+        <div class="endpoint">
+          <span class="mb-1 http-method http-get">GET</span>
+          <code style="background: var(--bg-surface)"
+            class="p-1 ronde-1">/api/utilisateurs/&lt;id&gt;/publications</code>
+          <span>Utilisateur -> Publication (one_to_many)</span>
+        </div>
+        <div class="endpoint">
+          <span class="mb-1 http-method http-post">POST</span>
+          <code style="background: var(--bg-surface)"
+            class="p-1 ronde-1">/api/utilisateurs/&lt;id&gt;/publications</code>
+          <span>Creer une ressource liee a Utilisateur</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="aff-flex fd-col fd-myn-ligne jc-mil gap-5 p-myn-2">
+    <form class="bloc-12 bloc-myn-5 db-card tester-form" id="tester-form">
+      <h3>Api tester</h3>
+
+      <div class="aff-flex fd-col gap-2 my-2">
+        <label for="tester-method">Method</label>
+        <select name="tester-method" id="tester-method">
+          <option>GET</option>
+          <option>POST</option>
+          <option>PUT</option>
+          <option>DELETE</option>
+        </select>
+      </div>
+
+      <div class="aff-flex fd-col gap-2 my-2">
+        <label for="tester-url">URL</label>
+        <div class="aff-flex gap-3 ai-mil">
+          <span class="ronde p-1 url-prefix" id="tester-base" style="background: var(--bg-surface-2)"></span>
+          <input id="tester-url" class="testeur-url" type="text" placeholder="/api/..." />
+        </div>
+      </div>
+
+      <div class="aff-flex fd-col gap-2 my-3">
+        <label for="tester-headers">Headers (JSON)</label>
+        <textarea id="tester-headers" rows="4">
+{ "Content-Type": "application/json" }</textarea>
+      </div>
+
+      <div class="aff-flex fd-col gap-2 my-3">
+        <label for="tester-body">Body (JSON)</label>
+        <textarea id="tester-body" rows="7" class="texteArea">{}</textarea>
+      </div>
+
+      <div class="aff-flex fd-col gap-2 my-3">
+        <button id="tester-send" type="submit" class="bouton ronde-1 bouton-succes">Send Request</button>
+        <div class="hint">Tip: GET/DELETE ignore body.</div>
+      </div>
+
+      <div id="tester-error" class="error"></div>
+
+      <div class="quick-endpoints">
+        <div class="quick-title">Quick endpoints</div>
+        <div class="quick-list">
+          <button class="bouton quick-btn" type="button" data-method="GET" data-path="/api/users">
+            GET /api/users
+          </button>
+          <button class="bouton quick-btn" type="button" data-method="GET" data-path="/api/users/1">
+            GET /api/users/1
+          </button>
+          <button class="bouton quick-btn" type="button" data-method="POST" data-path="/api/users"
+            data-fields="">
+            POST /api/users
+          </button>
+          <button class="bouton quick-btn" type="button" data-method="GET" data-path="/api/utilisateurs">
+            GET /api/utilisateurs
+          </button>
+          <button class="bouton quick-btn" type="button" data-method="GET" data-path="/api/utilisateurs/1">
+            GET /api/utilisateurs/1
+          </button>
+          <button class="bouton quick-btn" type="button" data-method="POST" data-path="/api/utilisateurs"
+            data-fields="nom:String,email:String,role:String">
+            POST /api/utilisateurs
+          </button>
+          <button class="bouton quick-btn" type="button" data-method="GET" data-path="/api/publications">
+            GET /api/publications
+          </button>
+          <button class="bouton quick-btn" type="button" data-method="GET" data-path="/api/publications/1">
+            GET /api/publications/1
+          </button>
+          <button class="bouton quick-btn" type="button" data-method="POST" data-path="/api/publications"
+            data-fields="titre:String,contenu:Text,date_creation:Date,is_public:Boolean">
+            POST /api/publications
+          </button>
+        </div>
+      </div>
+    </form>
+    <div class="bloc-12 bloc-myn-4 tester-response">
+      <h3>Response api</h3>
+      <div class="response-header aff-flex jc-sb">
+        <div>Status: <span id="tester-status" class="status">-</span></div>
+        <div>Time: <span id="tester-time">-</span></div>
+      </div>
+
+      <pre id="tester-output" class="overx-auto lh-2 p-2 tester-output couleur-vert-sauge h-5 overy-auto">{}</pre>
+    </div>
+  </section>
+
+  <section class="col gap-5 ai-mil">
+    <div class="bloc-12 bloc-myn-9 db-card my-3 w-full p-1">
+      <h2>Models</h2>
+      
+      <div class="model-card">
+        <div class="group-title">User</div>
+        <div class="table">
+          <div class="row header">
+            <div>Field</div>
+            <div>Type</div>
+            <div>Options</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="model-card">
+        <div class="group-title">Utilisateur</div>
+        <div class="table">
+          <div class="row header">
+            <div>Field</div>
+            <div>Type</div>
+            <div>Options</div>
+          </div>
+          <div class="row">
+            <div><code>nom</code></div>
+            <div>String</div>
+            <div class="options">
+<span class="chip">not-null</span><span class="chip">default=None</span>            </div>
+          </div>
+          <div class="row">
+            <div><code>email</code></div>
+            <div>String</div>
+            <div class="options">
+<span class="chip">unique</span><span class="chip">not-null</span><span class="chip">default=None</span>            </div>
+          </div>
+          <div class="row">
+            <div><code>role</code></div>
+            <div>String</div>
+            <div class="options">
+<span class="chip">not-null</span><span class="chip">default=admin</span>            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="model-card">
+        <div class="group-title">Publication</div>
+        <div class="table">
+          <div class="row header">
+            <div>Field</div>
+            <div>Type</div>
+            <div>Options</div>
+          </div>
+          <div class="row">
+            <div><code>titre</code></div>
+            <div>String</div>
+            <div class="options">
+<span class="chip">not-null</span><span class="chip">default=None</span>            </div>
+          </div>
+          <div class="row">
+            <div><code>contenu</code></div>
+            <div>Text</div>
+            <div class="options">
+<span class="chip">not-null</span><span class="chip">default=None</span>            </div>
+          </div>
+          <div class="row">
+            <div><code>date_creation</code></div>
+            <div>Date</div>
+            <div class="options">
+<span class="chip">not-null</span><span class="chip">default=None</span>            </div>
+          </div>
+          <div class="row">
+            <div><code>is_public</code></div>
+            <div>Boolean</div>
+            <div class="options">
+<span class="chip">not-null</span><span class="chip">default=None</span>            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer style="margin-top: 40px; color: var(--text-muted); text-align: center; font-size: 0.9rem; padding: 20px;">
+    <div>Genere par Orion - Dann Sloann</div>
+  </footer>
+
+  <script>
+    (function () {
+      const form = document.getElementById("tester-form");
+      const methodEl = document.getElementById("tester-method");
+      const urlEl = document.getElementById("tester-url");
+      const headersEl = document.getElementById("tester-headers");
+      const bodyEl = document.getElementById("tester-body");
+      const statusEl = document.getElementById("tester-status");
+      const timeEl = document.getElementById("tester-time");
+      const outputEl = document.getElementById("tester-output");
+      const errorEl = document.getElementById("tester-error");
+      const baseEl = document.getElementById("tester-base");
+
+      function setError(message) {
+        errorEl.textContent = message || "";
+      }
+
+      function normalizeUrl(value) {
+        if (!value) return "";
+        if (value.startsWith("http://") || value.startsWith("https://")) {
+          return value;
+        }
+        if (!value.startsWith("/")) return "/" + value;
+        return value;
+      }
+
+      function sampleValue(type) {
+        const t = String(type || "").toLowerCase();
+        if (t.includes("int")) return 1;
+        if (t.includes("float") || t.includes("double") || t.includes("numeric")) return 1.5;
+        if (t.includes("bool")) return false;
+        if (t.includes("datetime")) return "2024-01-01T10:00:00Z";
+        if (t === "date") return "2024-01-01";
+        if (t.includes("json")) return {};
+        return "string";
+      }
+
+      function buildSample(fieldsText) {
+        if (!fieldsText) return {};
+        const obj = {};
+        fieldsText.split(",").forEach((pair) => {
+          const parts = pair.split(":");
+          const name = (parts[0] || "").trim();
+          const type = (parts[1] || "").trim();
+          if (!name) return;
+          obj[name] = sampleValue(type);
+        });
+        return obj;
+      }
+
+      function setStatus(value, ok) {
+        statusEl.textContent = value;
+        statusEl.classList.remove("ok", "bad");
+        statusEl.classList.add(ok ? "ok" : "bad");
+      }
+
+      baseEl.textContent = window.location.origin;
+
+      document.querySelectorAll(".quick-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const method = btn.dataset.method || "GET";
+          const path = btn.dataset.path || "";
+          methodEl.value = method;
+          urlEl.value = path;
+          if (method === "POST" || method === "PUT") {
+            const sample = buildSample(btn.dataset.fields);
+            bodyEl.value = JSON.stringify(sample, null, 2);
+          } else {
+            bodyEl.value = "";
+          }
+        });
+      });
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        setError("");
+        statusEl.textContent = "-";
+        timeEl.textContent = "-";
+
+        const method = methodEl.value;
+        const url = normalizeUrl(urlEl.value.trim());
+        if (!url) {
+          setError("URL manquante.");
+          return;
+        }
+
+        let headers = {};
+        const headersText = headersEl.value.trim();
+        if (headersText) {
+          try {
+            headers = JSON.parse(headersText);
+          } catch (err) {
+            setError("Headers JSON invalide.");
+            return;
+          }
+        }
+
+        const bodyText = bodyEl.value.trim();
+        const options = { method, headers };
+        if (method !== "GET" && method !== "DELETE" && bodyText) {
+          options.body = bodyText;
+        }
+
+        const start = performance.now();
+        try {
+          const response = await fetch(url, options);
+          const elapsed = Math.round(performance.now() - start);
+          timeEl.textContent = elapsed + "ms";
+          setStatus(response.status + " " + response.statusText, response.ok);
+
+          const contentType = response.headers.get("content-type") || "";
+          const text = await response.text();
+          if (contentType.includes("application/json")) {
+            try {
+              const data = JSON.parse(text);
+              outputEl.textContent = JSON.stringify(data, null, 2);
+            } catch (err) {
+              outputEl.textContent = text;
+            }
+          } else {
+            outputEl.textContent = text || "(empty)";
+          }
+        } catch (err) {
+          setStatus("ERROR", false);
+          outputEl.textContent = String(err);
+        }
+      });
+    })();
+  </script>
+</body>
+
+</html>

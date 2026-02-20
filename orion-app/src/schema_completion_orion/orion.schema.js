@@ -26,7 +26,12 @@ export const ORION_MODELS_SCHEMA = {
         relations: {
           type: "array",
           items: ORION_RELATION_SCHEMA
-        }
+        },
+
+      protege: {
+      type: "boolean",
+      default: false
+    },
       }
     }
   }

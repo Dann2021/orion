@@ -1,8 +1,9 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify
 from flask_cors import CORS
 from extensions import bcrypt, jwt
 from routes.projet import projet_bp
 from routes.download import download_bp
+
 
 # import des blueprints
 # from api.evenements import evenements_bp
