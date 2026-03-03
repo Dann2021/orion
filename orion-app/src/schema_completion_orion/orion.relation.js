@@ -14,7 +14,6 @@ export const ORION_RELATION_SCHEMA = {
       enum: [
         "one_to_one",
         "one_to_many",
-        "many_to_one",
         "many_to_many"
       ],
       description: "Type de relation"

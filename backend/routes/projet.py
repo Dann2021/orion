@@ -1,20 +1,27 @@
-from flask import Blueprint, jsonify, request
-from modeles.models import Projet, Data
-from database import get_db
 from core import (
-    generateur,
-    fabrique_blueprint,
-    projet_dir,
     ensure_dir,
-    type_utilises,
+    fabrique_blueprint,
+    generateur,
     normalize_relations,
     parseur_modele,
+    projet_dir,
+    type_utilises,
 )
+from database import get_db
+from flask import Blueprint, abort, jsonify, request
 from mapping import TYPE_MAPPING
-
+from marshmallow import ValidationError
+from modeles.models import Data, Projet
+from schema.projet_schema import ProjetSchema
+from utils.utils import reponse_json
 
 # creation du blueprint_projet
 projet_bp = Blueprint("projets", __name__, url_prefix="/api/projets")
+
+
+# creation des variable pour serialiser et deserialiser
+projet_schema = ProjetSchema()
+projet_schemas = ProjetSchema(many=True)
 
 
 # creation  d'un CRUD
@@ -84,7 +91,11 @@ def generate_backend_for_projet(
     # classe_jwt = auth.get("classe")
 
     # On normalise les types
-    classe_pour_jwt = parseur_modele(schema=classe_jwt, type_mapping=TYPE_MAPPING)
+    # classe_pour_jwt = parseur_modele(schema=classe_jwt, type_mapping=TYPE_MAPPING)
+    classe_pour_jwt = None
+
+    if auth.get("type") == "jwt" and classe_jwt:
+        classe_pour_jwt = parseur_modele(schema=classe_jwt, type_mapping=TYPE_MAPPING)
 
     generateur(
         template_name="modele.py.jinja",
@@ -93,7 +104,8 @@ def generate_backend_for_projet(
             "model_base": classe_pour_jwt,  # ici on choisit le premier modele pour qu'il soit celui de l'auth
             "type_utilises": types_utilises,
             "relations": relations,
-            "auth_type_jwt": auth.get("type") == "jwt",
+            "auth_type_jwt": auth.get("type")
+            == "jwt",  # Boolean pour indiquer si on utilise JWT ou pas
             # "model_auth": auth.get("classe"),
         },
         chemin_sortie=modeles_path,
@@ -106,42 +118,25 @@ def generate_backend_for_projet(
 
     for model in schemas:
 
-        model_source_relations = [
-            rel for rel in relations if rel["source"] == model["nom"]
-        ]
+        relations_source = [rel for rel in relations if rel["source"] == model["nom"]]
 
         # Relations qui ciblent ce modèle
-        model_cible_relations = [
-            rel for rel in relations if rel["cible"] == model["nom"]
-        ]
-
-        # Relation liée au JWT (s'il y en a une)
-        jwt_relation = None
-        if auth.get("type") == "jwt":
-            jwt_relation = next((rel for rel in model_cible_relations), None)
+        relations_cible = [rel for rel in relations if rel["cible"] == model["nom"]]
 
         generateur(
             template_name="route_api.py.jinja",
             contexte={
                 "model": model,
-                "relations_cible": model_cible_relations,
                 "auth": auth,
-                "model_auth_name": auth.get("classe"),
-                "use_session": auth.get("type") == "session",
-                "use_jwt": auth.get("type") == "jwt",
-                "jwt_relation": jwt_relation,
-                "relations_source": model_source_relations,
+                "use_session": auth.get("type") == "session",  # Boolean
+                "use_jwt": auth.get("type") == "jwt",  # Boolean
+                "relations_source": relations_source,
+                "relations_cible": relations_cible,
+                "relations": relations,
             },
             chemin_sortie=routes_path,
             nom_fichier=f"{model['nom'].lower()}.py",
         )
-
-    generateur(
-        template_name="route_api.py.jinja",
-        contexte={"model": classe_pour_jwt},
-        chemin_sortie=routes_path,
-        nom_fichier=f"{classe_pour_jwt['nom'].lower()}.py",
-    )
 
     # 3️⃣ app.py + blueprints
     blueprints = []
@@ -151,14 +146,31 @@ def generate_backend_for_projet(
             {"nom": model["nom"].lower(), "bp": fabrique_blueprint(model)}
         )
 
-    # fabrique blueprint pour la classe jwt
+    if classe_pour_jwt:
+        # fabrique blueprint pour la classe jwt
+        blueprints.append(
+            {
+                "nom": classe_pour_jwt["nom"].lower(),
+                "bp": fabrique_blueprint(classe_pour_jwt),
+            }
+        )
 
-    blueprints.append(
-        {
-            "nom": classe_pour_jwt["nom"].lower(),
-            "bp": fabrique_blueprint(classe_pour_jwt),
-        }
-    )
+        # route pour fichier User
+        generateur(
+            template_name="route_api.py.jinja",
+            contexte={"model": classe_pour_jwt, "use_jwt": auth.get("type") == "jwt"},
+            chemin_sortie=routes_path,
+            nom_fichier=f"{classe_pour_jwt['nom'].lower()}.py",
+        )
+
+        generateur(
+            template_name="schema.py.jinja",
+            contexte={"model": classe_pour_jwt, "auteur": projet.auteur},
+            chemin_sortie=schemas_path,
+            nom_fichier=f"{classe_pour_jwt['nom'].lower()}_schema.py",
+        )
+
+        schemas.append(classe_pour_jwt)
 
     generateur(
         template_name="app.py.jinja",
@@ -281,45 +293,28 @@ def generate_backend_for_projet(
             nom_fichier=f"{model['nom'].lower()}_schema.py",
         )
 
-    # Génération de schéma pour le model User
-    generateur(
-        template_name="schema.py.jinja",
-        contexte={"model": classe_pour_jwt, "auteur": projet.auteur},
-        chemin_sortie=schemas_path,
-        nom_fichier=f"{classe_pour_jwt['nom'].lower()}_schema.py",
-    )
-
 
 # Creation de l'élément
 
 
 @projet_bp.post("/")
 def c_projet():
-    with get_db() as session_db:
+    with get_db() as db:
 
-        # creation du data_get pour recuperer les donnees du POST
-        data = request.get_json()
+        try:
+            # creation du data_get pour recuperer les donnees du POST
+            data = request.get_json()
 
-        # creation d'une instance de la classe Projet
-        projet = Projet(
-            nom=data.get("nom"),
-            auteur=data.get("auteur"),
-        )
+            # creation d'une instance de la classe Projet à partir du schema
+            projet = projet_schema.load(data, session=db)
 
-        # Ajout dans la session
-        session_db.add(projet)
-        session_db.commit()
+            # Ajout dans la session
+            db.add(projet)
+            db.commit()
 
-        return (
-            jsonify(
-                {
-                    "message": "Projet créé avec succès",
-                    "statut": True,
-                    "nom": projet.nom,
-                }
-            ),
-            201,
-        )
+            return reponse_json(data=projet_schema.dump(projet), status=201)
+        except ValidationError as err:
+            abort(400, description=str(err.messages))
 
 
 @projet_bp.post("/generate/<int:projet_id>")
@@ -332,13 +327,13 @@ def generate(projet_id):
         classe_jwt = auth.get("classe") or {}
 
         if not modele or not base_de_donnees:
-            return jsonify({"error": "modele ou databaseConfig manquant"}), 400
+            abort(400, description="modele ou databaseConfig manquant")
 
-        with get_db() as session_db:
-            projet = session_db.query(Projet).filter_by(id=projet_id).first()
+        with get_db() as db:
+            projet = db.query(Projet).filter_by(id=projet_id).first()
 
             if not projet:
-                return jsonify({"error": "Projet introuvable"}), 404
+                abort(404, description="Projet introuvable")
 
             # 🔹 Enregistrement de la config DB
             db_config = Data(
@@ -348,12 +343,11 @@ def generate(projet_id):
                 name=base_de_donnees.get("database"),
                 username=base_de_donnees.get("username"),
                 password=base_de_donnees.get("password"),
-                projet_id=projet.id,
             )
 
-            session_db.add(db_config)
-            session_db.commit()
-            session_db.refresh(db_config)
+            db.add(db_config)
+            db.commit()
+            db.refresh(db_config)
 
         generate_backend_for_projet(
             projet_id,
@@ -362,7 +356,7 @@ def generate(projet_id):
             auth=auth,
             classe_jwt=classe_jwt,
         )
-        return jsonify({"message": "Backend généré avec succès"}), 200
+        return reponse_json(data={"message": "Backend généré avec succès"})
     except Exception as e:
         import traceback
 
@@ -374,43 +368,55 @@ def generate(projet_id):
 @projet_bp.get("/<int:id>")
 def r_projet(id):
 
-    with get_db() as session_db:
-
+    with get_db() as db:
         # verification de l'existence de la ressource
-        projet = session_db.query(Projet).filter(Projet.id == id).first()
+        projet = db.query(Projet).filter(Projet.id == id).first()
 
         if not projet:
-            return jsonify({"message": "ressource introuvable"}), 404
-
-        return jsonify({"projet": projet.data_projet()}), 200
+            abort(404)
+        return reponse_json(data=projet_schema.dump(projet))
 
 
 # route pour voir toutes les ressources
 @projet_bp.get("/")
 def rr_projet():
 
-    with get_db() as session_db:
-        # verification de l'existence de la ressource
+    with get_db() as db:
+        # Creation de la pagination  + filtres
+        limit = min(request.args.get("limit", 20, type=int), 100)
+        offset = request.args.get("offset", 0, type=int)
 
-        projet_list = session_db.query(Projet).all()
-        if not projet_list:
-            return jsonify({"message": "ressources introuvable"}), 404
+        query = db.query(Projet)
 
-        return jsonify({"projets": Projet.list_data(projet_list)}), 200
+        if "nom" in request.args:
+            query = query.filter(Projet.nom == request.args.get("nom"))
+
+        if "auteur" in request.args:
+            query = query.filter(Projet.auteur == request.args.get("auteur"))
+
+        if "langage" in request.args:
+            query = query.filter(Projet.auteur == request.args.get("langage"))
+
+        total = query.count()
+        items = query.offset(offset).limit(limit).all()
+
+        return reponse_json(
+            data=projet_schemas.dump(items),
+            meta={"total": total, "limit": limit, "offset": offset},
+        )
 
 
 # route pour supprimer une ressource
 @projet_bp.delete("/<int:id>")
 def d_projet(id):
 
-    with get_db() as session_db:
-
+    with get_db() as db:
         # verification de l'existence de la ressource
-        projet = session_db.query(Projet).filter(Projet.id == id).first()
+        projet = db.query(Projet).filter(Projet.id == id).first()
         if not projet:
-            return jsonify({"message": "ressource introuvable"}), 404
+            abort(404)
 
-        session_db.delete(projet)
-        session_db.commit()
+        db.delete(projet)
+        db.commit()
 
-        return jsonify({"message": "ressource supprimée avec succes"}), 200
+        return reponse_json(data={"message": "ressource supprimée avec succes"})

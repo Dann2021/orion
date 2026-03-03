@@ -1,51 +1,51 @@
 [
     {
         "method": "POST",
-        "path": "/api/users/",
-        "description": "Route pour creer un nouvel utilisateur",
+        "path": "/api/ressources",
+        "description": "Route pour creer une nouvelle ressource",
         "request": {
-            "body": {"username": "string", "email": "string", "password": "string"}
+            "body": {"nom": "string", "description": "string"}
         },
         "response": {
             "status": 201,
-            "body": {"message": "User created successfully"}
+            "body": {"message": "Ressource créée avec succès"}
         }
 
     }, 
     {
         "method": "GET",
-        "path": "/api/users/",
-        "description": "Route pour recuperer tous les utilisateurs",
+        "path": "/api/ressources/",
+        "description": "Route pour recuperer toutes les ressources",
         "response": {
             "status": 200,
             "body": {
-                "users": [
-                    {"id": 1, "username": "user1", "email": "user1@example.com"},
-                    {"id": 2, "username": "user2", "email": "user2@example.com"}
+                "ressources": [
+                    {"id": 1, "nom": "ressource1", "description": "Description de la ressource 1"},
+                    {"id": 2, "nom": "ressource2", "description": "Description de la ressource 2"}
                 ]
             }
         }
     },
     {
         "method": "GET",
-        "path": "/api/users/{id}",
-        "description": "Route pour recuperer un utilisateur par ID",
+        "path": "/api/ressources/{id}",
+        "description": "Route pour recuperer une ressource par ID",
         "response": {
             "status": 200,
-            "body": {"id": 1, "username": "user1", "email": "user1@example.com"}
+            "body": {"id": 1, "nom": "ressource1", "description": "Description de la ressource 1"}
         }
     },
    
     {
         "method": "PUT",
-        "path": "/api/users/{id}",
-        "description": "Route pour mettre a jour un utilisateur par ID",
+        "path": "/api/ressources/{id}",
+        "description": "Route pour mettre a jour une ressource par ID",
         "request": {
-            "body": {"username": "string", "email": "string", "password": "string"}
+            "body": {"nom": "string", "description": "string"}
         },
         "response": {
             "status": 200,
-            "body": {"message": "Utilisateur mis a jour avec succes"}
+            "body": {"message": "Ressource mise a jour avec succes"}
         }
     },
                 
@@ -53,11 +53,13 @@
     
     {
         "method": "DELETE",
-        "path": "/api/user/{id}",
-        "description": "Route pour supprimer un utilisateur par ID",
+        "path": "/api/ressources/{id}",
+        "description": "Route pour supprimer une ressource par ID",
         "response": {
             "status": 204,
-            "body": {}
+            "body": {
+                "message": "Ressource supprimee avec succes"
+            }
         }
     }
 ]

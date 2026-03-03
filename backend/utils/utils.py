@@ -1,0 +1,26 @@
+from flask import abort, jsonify, make_response, request
+
+
+# fichier utilitaires
+def reponse_json(data=None, meta=None, status=200):
+    response = make_response(
+        jsonify({"status": "success", "data": data, "meta": meta or {}}), status
+    )
+    return response
+
+
+def get_json_or_400():
+    data = request.get_json()
+    if data is None:
+        abort(400, description="JSON invalide")
+    return data
+
+
+def get_or_404(db, model, id):
+    instance = db.query(model).filter(model.id == id).first()
+    if not instance:
+        abort(404)
+    return instance
+
+
+# Fichier utils.py créé automatiquement par Dannys Skyrock

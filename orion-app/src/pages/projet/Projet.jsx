@@ -14,7 +14,7 @@ export default function Projet() {
 
   //const projets = data?.projets;
 
-  const projets = data?.projets ?? [];
+  const projets = data?.data ?? [];
 
   // creation de la fonction pour supprimer un projet
 
@@ -77,13 +77,13 @@ const CardProjet = ({ nom, nomAuteur, onClick }) => {
         <Bouton
           onClick={onClick}
           taille={"min"}
-          className={"taille-pt bouton-icone"}
+          className={"taille-pt bouton-icone ronde"}
           style={{
             background: "var(--bg-surface)",
             border: "1px solid var(--border)",
           }}
         >
-          Supprimer
+         
           <Trash2 size={16} />
         </Bouton>
       </Card.Header>

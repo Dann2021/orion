@@ -1,15 +1,12 @@
+from database import Base, engine
+from extensions import bcrypt, jwt
 from flask import Flask, jsonify
 from flask_cors import CORS
-from extensions import bcrypt, jwt
-from routes.projet import projet_bp
+from handle.errors import enregistreur_erreur
+from routes.datas import database_bp
 from routes.download import download_bp
-
-
-# import des blueprints
-# from api.evenements import evenements_bp
-
-
-from database import Base, engine
+from routes.modele import modele_bp
+from routes.projet import projet_bp
 
 # Création d'une instance Flask
 app = Flask(__name__)
@@ -17,11 +14,12 @@ app = Flask(__name__)
 # enregistrement des blueprint ici
 app.register_blueprint(projet_bp)
 app.register_blueprint(download_bp)
+app.register_blueprint(modele_bp)
+app.register_blueprint(database_bp)
 
 
 # Import de la configuration
-from config import Config
-
+from config import Config  # noqa: E402
 
 # Application de la configuration
 app.config.from_object(Config)
@@ -30,25 +28,19 @@ app.config.from_object(Config)
 # Configuration de la clé secrète pour la session
 app.secret_key = Config.SECRET_KEY
 
-
 CORS(
     app,
-    origins=[
-        "http://localhost:5173",
-    ],
+    resources={r"/api/*": {"origins": "http://localhost:5173"}},
     supports_credentials=True,
-    methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["Content-Type", "Authorization"],
-)  # Pour utiliser l'api partout
+)
 
 
 # Initialisation des extensions
 bcrypt.init_app(app)
 jwt.init_app(app)
 
-
-# Authentification google fait  18/05/2025
-
+# Gestion des erreurs api (handle errors)
+enregistreur_erreur(app)
 
 # Création des tables
 try:

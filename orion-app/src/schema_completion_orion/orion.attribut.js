@@ -11,7 +11,7 @@ export const ORION_ATTRIBUT_SCHEMA = {
 
     type: {
       type: "string",
-      enum: ["string", "integer", "float", "bool", "date", "datetime", "texte"],
+      enum: ["string", "integer", "float", "bool", "date", "datetime", "texte", "json"],
       description: "Type de donnée"
     },
 

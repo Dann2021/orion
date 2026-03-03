@@ -21,13 +21,13 @@ const PreviewApiTestJson = ({ dataJson }) => {
       {dataJson.map((item, index) => (
         <div key={index} className="mb-4 p-3" >
           <div className="aff-flex gap-4 ai-mil">
-            <span className="tag">
+            <span className="tag ">
               <code>{item.method}</code>
             </span>
-            <strong className="taille-pt inter">{item.path}</strong>
+            <strong className="taille-pt">{item.path}</strong>
           </div>
 
-          <p className="mh-1 inter">{item.description}</p>
+          <p className="mh-1">{item.description}</p>
 
           {/* REQUEST */}
           {item.request && (
@@ -39,7 +39,7 @@ const PreviewApiTestJson = ({ dataJson }) => {
 
           {/* RESPONSE */}
           <h4 className="mh-1">Response ({item.response.status})</h4>
-          <pre className="taille-pt">{JSON.stringify(item.response.body, null, 2)}</pre>
+          <pre className="taille-pt couleur-vert-sauge">{JSON.stringify(item.response.body, null, 2)}</pre>
         </div>
       ))}
     </div>

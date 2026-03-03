@@ -1,7 +1,11 @@
 {# Projet final pour utiliser dans mon app #}
 {# creation des modeles pour la base de données #}
+{% if relations %}
 from sqlalchemy import Column, ForeignKey, {{ type_utilises | join(", ")  }}
 from sqlalchemy.orm import relationship 
+{% else %}
+from sqlalchemy import Column, {{ type_utilises | join(", ")  }}
+{% endif %}
 from database import Base 
 
 {# Récupération du auth_type et model_auth pour créer un User si le model_auth n'est pas vrai #}
@@ -20,7 +24,7 @@ class {{ model_base.nom }}(Base):
 
     {% for model in models %}
         {% if model.protege | default(false) and model.nom != "User" %}
-    # Relation vers d'autres classes
+    # Relation vers {{ model.nom }}
     {{ model.nom | lower }}s = relationship("{{ model.nom }}", back_populates="user")
         {% endif %}
     {% endfor %}
@@ -59,6 +63,19 @@ class {{ nomClasse }}(Base):
     {{ attribut_inverse_id }} = Column(Integer, ForeignKey("{{ (sources) | lower }}.id"), nullable={{ rel.nullable | lower | capitalize }})
     {{ attribut_inverse }} = relationship("{{ source }}", back_populates="{{ rel.champ }}")
     {% endif %} 
+    {% if rel.type == "one_to_one" and rel.source == nomClasse %}
+    {{ rel.champ }} = relationship("{{ rel.cible }}", back_populates="{{ rel.attribut_inverse }}", uselist=False, cascade="all, delete-orphan") 
+    {% endif %}
+    {% if rel.type == "one_to_one" and rel.cible == nomClasse %}
+    {# creation d'une variable attribut inverse pour stocker directement la valeur #}
+    {# ici au lieu d'utiliser les variables rel.variable dans la génération ci-dessous, je les stocke directement en mémoire dans des variables créées  #}
+    {% set attribut_inverse_id = rel.attribut_inverse ~ "_id" %}
+    {% set attribut_inverse = rel.attribut_inverse %}
+    {% set sources = rel.source ~ "s"%}
+    {% set source = rel.source %}
+    {{ attribut_inverse_id }} = Column(Integer, ForeignKey("{{ (sources) | lower }}.id"), unique=True, nullable={{ rel.nullable | lower | capitalize }})
+    {{ attribut_inverse }} = relationship("{{ source }}", back_populates="{{ rel.champ }}")
+    {% endif %}
     {% endfor %}
 {% endif %}
 {% if auth_type_jwt and model.protege is defined and model.protege and model.nom != "User" %}

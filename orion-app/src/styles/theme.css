@@ -138,3 +138,89 @@ pre {
   border-color: rgba(77, 163, 255, 0.3);
   box-shadow: 0 0 25px rgba(77, 163, 255, 0.08);
 }
+
+
+/* ================= TAG VARIANTS ================= */
+
+/* INFO */
+.tag-info {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.tag-info .tag-dot {
+  background: var(--primary);
+}
+
+/* SUCCESS */
+.tag-success {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: var(--success);
+  color: var(--success);
+}
+.tag-success .tag-dot {
+  background: var(--success);
+}
+
+/* WARNING */
+.tag-warning {
+  background: rgba(250, 204, 21, 0.1);
+  border-color: var(--warning);
+  color: var(--warning);
+}
+.tag-warning .tag-dot {
+  background: var(--warning);
+}
+
+/* DANGER */
+.tag-danger {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.tag-danger .tag-dot {
+  background: var(--danger);
+}
+
+/* NEUTRAL */
+.tag-neutral {
+  background: var(--bg-surface);
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+.tag-neutral .tag-dot {
+  background: var(--text-muted);
+}
+
+
+/* ================= CARDS ================= */
+
+.card-dash {
+  position: relative;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  transition: all .3s ease;
+}
+
+.card-dash::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid transparent;
+  transition: all .3s ease;
+  pointer-events: none;
+}
+
+.card-dash:hover {
+  background: var(--bg-surface-2);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 35px rgba(0,0,0,.45);
+}
+
+.card-dash:hover::after {
+  border-color: var(--primary);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
+}

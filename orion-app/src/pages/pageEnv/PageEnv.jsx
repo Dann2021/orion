@@ -1,4 +1,4 @@
-import { Copy, KeyRoundIcon, SendHorizonal } from "lucide-react";
+import { Copy, Key, KeyRoundIcon, SendHorizonal } from "lucide-react";
 import { useState } from "react";
 import { Bloc, Bouton, Col, Input } from "../../composants";
 import { style } from "./constante";
@@ -6,8 +6,16 @@ import { style } from "./constante";
 export default function PageEnv() {
   const [nomCle, setNomCle] = useState("");
   return (
-    <Col className={"py-3"}>
-      <h1>Générez vos variables d'environnement</h1>
+    <Col>
+      <div className="aff-flex gap-2 ai-mil">
+        <Key  />
+        <h1>Variables d'environnement</h1>
+      </div>
+    
+      <p style={{color: "var(--text-muted)"}} className="mh-3 ">
+          Les variables d'environnement sont généralement utilisées pour stocker
+          des valeurs comme des clés d'api, secret ou jwt.
+        </p>
 
       <Bloc
         type={"myn"}
@@ -20,10 +28,7 @@ export default function PageEnv() {
           <h4 className="fira">variable d'environnement</h4>
         </div>
 
-        <p className="mh-3">
-          Les variables d'environnement sont généralement utilisées pour stocker
-          des valeurs comme des clés d'api, secret ou jwt.
-        </p>
+      
 
         <div className="aff-flex fd-col ai-mil my-5">
           <div className="aff-flex gap-3 w-full jc-mil">

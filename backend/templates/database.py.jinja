@@ -12,8 +12,7 @@ engine = create_engine(
     {% if database_type == "sqlite" %}
     connect_args={"check_same_thread": False},
     {% endif %}
-    pool_pre_ping=True
-)
+    pool_pre_ping=True)
 
 Base = declarative_base()
 
@@ -28,6 +27,9 @@ def get_db():
     db = SessionLocal()
     try:
         yield db
+    except Exception as ex:
+        db.rollback() # Permet d'annuler les changements effectués dans la session en cas d'erreur
+        raise ex
     finally:
         db.close()
 

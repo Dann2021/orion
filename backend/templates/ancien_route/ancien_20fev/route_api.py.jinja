@@ -1,0 +1,321 @@
+{% set nom = model.nom | lower %}
+{% set classe = model.nom | capitalize %}
+{% set blue_print = nom ~ '_bp' %}
+{% set nomFichierSchema = nom ~ "_schema" %}
+{% set nomSchema = classe ~ "Schema" %}
+{% set schemaOne = nom ~ "_schema" %}
+{% set schemaMany = nom ~ "_schemas" %}
+{% set session_id = nom ~ "_id" %}
+{% set base_route_api = nom ~ 's' %}
+{% import "variables/variable.jinja" as vars %}
+{% from "variables/variable.jinja" import ROUTE_COLLECTION, ROUTE_ITEM, ROUTE_RELATION_PREFIX %}
+{# modele pour les routes #}
+from flask import Blueprint, request, abort
+from modeles.models import {{ classe }}
+from utils.utils import reponse_json
+from database import get_db
+from schemas.{{ nomFichierSchema }} import {{ nomSchema }}
+from marshmallow import ValidationError
+{% if use_session %}
+from flask import session
+{% endif %}
+{% if use_jwt and model.nom == "User" %}
+from extensions import bcrypt
+{% endif %}
+{% if use_jwt %}
+{{ vars.JWT_IMPORTS }}
+{% endif %}
+
+
+
+# creation du blueprint_{{ nom }}
+{{ blue_print }} = Blueprint("{{ base_route_api }}", __name__, url_prefix="/api/{{ base_route_api }}")
+
+# creation  d'un CRUD (Create, Read, Update, Delete)
+# La création de cette api suit le pattern RESTful
+
+# creation des modeles schema pour la serialisation/deserialisation
+{{ schemaOne }} = {{ nomSchema }}()
+{{ schemaMany }} = {{ nomSchema }}(many=True)
+
+# Creation de la ressource {{ nom }} 
+@{{ blue_print }}.post("{{ ROUTE_COLLECTION }}")
+{% if jwt_relation %}
+@jwt_required()
+{% endif %}
+{% if model.protege is defined and model.protege %}
+@jwt_required()
+{% endif %}
+def creer_ressource_{{ nom }}():
+
+   
+
+    {% if model.protege is defined and model.protege %}
+    user_id = get_jwt_identity()
+
+    if not user_id:
+        abort(403, description="Authentification requise")
+    {% endif %}
+
+    with get_db() as db:
+        try: 
+            # creation du data_get pour recuperer les donnees du POST
+            data = request.get_json()
+            if data is None:
+                abort(400, description="JSON invalide")
+
+            {% if jwt_relation %}
+            {# ici si le jwt_relation existe on fait le traitement en récupérant le get_jwt_identity #}
+            {% set source_id = jwt_relation.source | lower ~ '_id' %}
+            {{ source_id }} = get_jwt_identity()
+            if not {{ source_id }}:
+                abort(401, description="Authentification requise")
+            data["{{ source_id }}"] = int({{ source_id }})
+            {% endif %}
+
+            {% if use_jwt and model.nom == "User" %}
+            password_hashed = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+            data['password'] = password_hashed
+            {% endif %}
+
+            {% if use_session %}
+            {% for rel in relations_cible %}
+            {% set source_id = rel.source | lower ~ "_id"%}
+            {{ source_id }} = session.get("{{ source_id }}")
+            if not {{ source_id }}:
+                abort(401)
+            data["{{ source_id }}"] = {{ source_id }}
+            {% endfor %}
+            {% endif %}
+
+            {% if model.protege is defined and model.protege %}
+            data['user_id'] = user_id
+            {% endif %}
+
+            # creation d'une instance de la classe {{ classe }}
+            {{ nom }} = {{ schemaOne }}.load(data, session=db)
+
+            db.add({{ nom }})
+            db.commit()
+            {% if use_session %}
+            {% for rel in relations_source %}
+           
+            {% set source_id = rel.source | lower ~ "_id"%}
+            session["{{ source_id }}"] = {{ nom }}.id
+            {% endfor %}
+            {% endif %}
+
+            return reponse_json(data={{ schemaOne }}.dump({{ nom }}), status=201)
+        except ValidationError as err:
+            abort(400, description=str(err.messages))
+
+{% if use_jwt and model.nom == "User" %}
+{% set nom_model = model.nom | lower %}
+{% set nom_classe = model.nom  %}
+# Configuration jwt
+
+# route login
+@{{ blue_print }}.post("{{ ROUTE_COLLECTION }}login")
+def login_{{ nom_model }}():
+
+    # creation du data_get pour recuperer les donnees du POST
+    data = request.get_json()
+    if not data:
+        abort(400, description="JSON invalide")
+    
+    email = data.get("email")
+    password = data.get("password")
+
+    if not email or not password:
+        abort(400, description="Email et mot de passe requis")
+
+    with get_db() as db:
+        {{ nom_model }} = db.query({{ nom_classe }}).filter_by(email=email).first()
+
+        if not {{ nom_model }}:
+            abort(401, description="Identifiants invalides")
+
+        ok = bcrypt.check_password_hash({{ nom_model }}.password, password)
+        if not ok :
+            abort(401, description="Mot de passe invalide")
+        
+        # Identity = ce que tu as défini dans auth.claims.identity
+        access_token = create_access_token(identity=str({{ nom_model }}.id), additional_claims={"role": {{ nom_model }}.role})
+
+        refresh_token = create_refresh_token(identity=str({{ nom_model }}.id))
+
+        # creation de la reponse
+        rep = reponse_json(data={"message": "authentification reussie"})
+
+        # on utilise la fonction set_access_cookies pour stocker le token dans les cookies de la reponse
+        set_access_cookies(rep, access_token)
+        set_refresh_cookies(rep, refresh_token)
+
+
+        return rep
+
+# route logout
+@{{ blue_print }}.post("{{ ROUTE_COLLECTION }}logout")
+@jwt_required()
+def logout():
+    rep = reponse_json(data={"message": "Logout reussi"})
+    unset_jwt_cookies(rep)
+    return rep
+
+
+# Route pour voir le profil
+@{{ blue_print }}.get("{{ ROUTE_COLLECTION }}me")
+@jwt_required()
+def me():
+    # recuperation du user_id via get_jwt_identity
+    {{ nom_model }}_id = get_jwt_identity()
+    
+    with get_db() as db:
+        {{ nom_model }} = db.query({{ nom_classe }}).filter({{ nom_classe }}.id == {{ nom_model }}_id).first()
+
+        if not {{ nom_model }}:
+            abort(404, description="Utilisateur introuvable")
+        return  reponse_json(data={{ schemaOne }}.dump({{ nom_model }}))
+{% endif %}
+
+
+# route pour voir une ressource
+@{{ blue_print }}.get("{{ ROUTE_ITEM }}")
+{% if model.protege is defined and model.protege %}
+@jwt_required()
+{% endif %}
+def recuperer_ressource_{{ nom }}(id):
+
+    {% if model.protege is defined and model.protege %}
+    user_id = get_jwt_identity()
+
+    if not user_id:
+        abort(403, description="Authentification requise")
+    {% endif %}
+    with get_db() as db:
+        # verification de l'existence de la ressource
+        {{ nom }} = db.query({{ classe }}).filter({{ classe }}.id == id).first()
+
+        if not {{ nom }}:
+            abort(404) 
+        return reponse_json(data={{ schemaOne }}.dump({{ nom }}))
+
+
+
+# route pour voir toutes les ressources (avec pagination et filtres)
+@{{ blue_print }}.get("{{ ROUTE_COLLECTION }}")
+{% if model.protege is defined and model.protege %}
+@jwt_required()
+{% endif %}
+def recuperer_ressources_{{ nom }}s():
+    {% if model.protege is defined and model.protege %}
+    user_id = get_jwt_identity()
+
+    if not user_id:
+        abort(403, description="Authentification requise")
+    {% endif %}
+
+    with get_db() as db:
+        # creation de la pagination + filtres
+        limit = request.args.get("limit", 20, type=int)
+        offset = request.args.get("offset", 0, type=int)
+
+        query = db.query({{ classe }})
+        {# filtres dynamiques #}
+        {% for attr in model.attributs %}
+        if "{{ attr.nom }}" in request.args:
+            query = query.filter({{ classe }}.{{ attr.nom }} == request.args.get("{{ attr.nom }}"))
+        {% endfor %}
+
+        total = query.count()
+        items = query.offset(offset).limit(limit).all()
+
+        return reponse_json(
+            data={{ schemaMany }}.dump(items),
+            meta={
+                "total": total,
+                "limit": limit,
+                "offset": offset
+            }
+        )
+
+# route pour mettre a jour une ressource
+@{{ blue_print }}.put("{{ ROUTE_ITEM }}")
+{% if model.protege is defined and model.protege %}
+@jwt_required()
+{% endif %}
+def mettre_a_jour_ressource_{{ nom }}(id):
+
+    {% if model.protege is defined and model.protege %}
+    user_id = get_jwt_identity()
+
+    if not user_id:
+        abort(403, description="Authentification requise")
+    {% endif %}
+
+    with get_db() as db:
+        # verification de l'existence de la ressource
+        {{ nom }} = db.query({{ classe }}).filter({{ classe }}.id == id).first()
+
+        if not {{ nom }}:
+            abort(404)
+
+        # recuperation des donnees du PUT
+        try:
+            data = request.get_json()
+            if data is None:
+                abort(400, description="JSON invalide")
+            updated = {{ schemaOne }}.load(data,instance={{ nom }},session=db,partial=True)
+            db.commit()
+            return reponse_json(data={{ schemaOne }}.dump(updated))
+        except ValidationError as err:
+            abort(400, description=str(err.messages))
+
+
+# route pour supprimer une ressource 
+@{{ blue_print }}.delete("{{ ROUTE_ITEM }}")
+{% if model.protege is defined and model.protege %}
+@jwt_required()
+{% endif %}
+def supprimer_ressource_{{ nom }}(id):
+
+    {% if model.protege is defined and model.protege %}
+    user_id = get_jwt_identity()
+
+    if not user_id:
+        abort(403, description="Authentification requise")
+    {% endif %}
+    with get_db() as db:
+        # verification de l'existence de la ressource
+        {{ nom }} = db.query({{ classe }}).filter({{ classe }}.id == id).first()
+
+        if not {{ nom }}:
+            abort(404)
+        db.delete({{ nom }})
+        db.commit()       
+        return reponse_json(data={"message": "ressource supprimée avec succes"})
+
+
+
+{% if relations_source %}
+# routes pour les relations
+{% for rel in relations_source %}
+from schemas.{{ rel.cible | lower }}_schema import {{ rel.cible }}Schema
+{{ rel.cible | lower }}_schemas = {{ rel.cible }}Schema(many=True)
+
+@{{ blue_print }}.get("{{ ROUTE_RELATION_PREFIX }}{{ rel.champ }}")
+def recuperer_ressource_lie_{{ nom }}_{{ rel.champ }}(id):
+
+    with get_db() as db:
+        ressource = db.query({{ rel.source }}).filter({{ rel.source }}.id == id).first()
+
+        if not ressource:
+            abort(404)
+
+        items = ressource.{{ rel.champ }}
+        return reponse_json(data={{ rel.cible | lower }}_schemas.dump(items))
+
+{% endfor %}
+
+{% endif %}
+

@@ -3,14 +3,9 @@ from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
 {% endif %}
 
-
-
-
 bcrypt = Bcrypt()
 {% if use_jwt %}
 jwt = JWTManager()
 {% endif %}
-
-
 
 # Fichier créé par {{ nom }} 
