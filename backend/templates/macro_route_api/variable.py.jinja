@@ -1,0 +1,92 @@
+{# creation d'une macro pour définir les variables #}
+{# Ces variables seront utiliser dans le fichier global des routes api #}
+{# Générateur de variable #}
+{% macro genere_variable(model, v) %}
+{%- set v.nom = model.nom | lower -%}
+{%- set v.classe = model.nom | capitalize -%}
+{%- set v.blueprint = v.nom ~ "_bp" -%}
+{%- set v.nomFichierSchema = v.nom ~ "_schema" -%}
+{%- set v.nomSchema = v.classe ~ "Schema" -%}
+{%- set v.schemaOne = v.nom ~ "_schema" -%}
+{%- set v.schemaMany = v.nom ~ "_schemas" -%}
+{%- set v.session_id = v.nom ~ "_id" -%}
+{%- set v.base_route_api = v.nom ~ "s" -%}
+{%- set v.protege = model.protege is defined and model.protege -%}
+{% endmacro %}
+
+
+{# variable pour jwt #}
+{% set JWT_IMPORTS = 
+"from flask_jwt_extended import (\n"
+"    create_access_token,\n"
+"    get_jwt_identity,\n"
+"    jwt_required,\n"
+"    set_access_cookies,\n"
+"    unset_jwt_cookies,\n"
+"    set_refresh_cookies,\n"
+"    create_refresh_token\n"
+")"
+%}
+
+{% macro genere_blueprint(model) %}
+{%- set v = namespace() %}
+{{ genere_variable(model, v) }}
+# creation du blueprint_{{ nom }}
+{{ v.blueprint }} = Blueprint("{{ v.base_route_api }}", __name__, url_prefix="/api/{{ v.base_route_api }}")
+{% endmacro %}
+
+{% macro genere_use_schema(model) %}
+{%- set v = namespace() %}
+{{ genere_variable(model, v) }}
+{# utilisation du schema #}
+{{ v.schemaOne }} = {{ v.nomSchema }}()
+{{ v.schemaMany }} = {{ v.nomSchema }}(many=True)
+{% endmacro %}
+
+{# Générateur d'import #}
+
+{% macro genere_import(model, relations, use_session, use_jwt) %}
+
+{%- set v = namespace() %}
+{{ genere_variable(model, v) }}
+
+{%- set est_protege = model.protege is defined and model.protege %}
+{%- set relations_source = relations | selectattr("source", "equalto", model["nom"]) | list %}
+{%- set relations_cible = relations | selectattr("cible", "equalto", model["nom"]) | list %}
+from flask import Blueprint, request, abort
+from utils.utils import reponse_json, get_json_or_400
+from database import get_db
+from marshmallow import ValidationError
+from modeles.models import {{ v.classe }}
+from schemas.{{ v.nomFichierSchema }} import {{ v.nomSchema }}
+
+{% if use_session %}
+from flask import session
+{% endif %}
+
+{% if use_jwt and v.classe == "User" %}
+from extensions import bcrypt
+{{ JWT_IMPORTS }}
+{% endif %}
+
+{% if use_jwt %}
+{% for rel in relations_cible %}
+from modeles.models import {{ rel.source }}
+{% endfor %}
+{% endif %}
+
+{% if est_protege %}
+from flask_jwt_extended import jwt_required, get_jwt_identity
+{% endif %}
+
+{% if not use_session and not use_jwt %}
+{% for rel in relations_cible %}
+from modeles.models import {{ rel.source }}
+{% endfor %}
+{% endif %}
+
+{% for rel in relations_source %}
+from schemas.{{ rel.cible | lower }}_schema import {{ rel.cible }}Schema
+{% endfor %}
+
+{% endmacro %}

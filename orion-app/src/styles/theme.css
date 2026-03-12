@@ -1,27 +1,82 @@
 :root {
   /* Backgrounds */
-  --bg-main: #0b0f1a; /* fond global */
-  --bg-surface: #111827; /* cartes / blocs */
-  --bg-surface-2: #1f2933; /* hover / secondary */
+  --bg-main: #0f0f11; /* fond global */
+  --bg-surface: #17171a; /* cartes / blocs */
+  --bg-surface-2: #222225; /* hover / secondary */
+  --bg-elevated: #1c1c20;
+  --btn-background: #6366f1;
 
   /* Textes */
-  --text-main: #e5e7eb; /* texte principal */
+  --text-main: #e4e4e7; /* texte principal */
   --text-muted: #9ca3af; /* texte secondaire */
   --text-disabled: #6b7280;
 
   /* Accents */
   --primary: #38bdf8; /* bleu ciel (action) */
   --primary-soft: #0ea5e9;
+  --primary-hover: #0ea5e9;
   --secondary: #22d3ee; /* cyan */
 
+  /* component */
+  --modal : #1c1c20
   /* États */
   --success: #22c55e;
   --warning: #facc15;
   --danger: #ef4444;
 
   /* Bordures */
-  --border: #1f2937;
+  --border: #2a2a2f;
 
+  /* Highlight */
+  --highlight: rgba(56, 189, 248, 0.25);
+  --highlight-soft: rgba(56, 189, 248, 0.12);
+
+  /* Focus */
+  --ring: rgba(56, 189, 248, 0.4);
+
+  /* Shadow */
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] {
+    /* Backgrounds */
+  --bg-main: #f6f7fb;
+  --bg-surface: #ffffff;
+  --bg-surface-2: #f1f5f9;
+  --bg-elevated: #ffffff;
+  --btn-background: #4f46e5;
+
+  /* Textes */
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-disabled: #94a3b8;
+
+  /* Accents */
+  --primary: #0ea5e9;
+  --primary-soft: #38bdf8;
+  --primary-hover: #0284c7;
+  --secondary: #06b6d4;
+
+  /* Component */
+  --modal: #ffffff;
+
+  /* États */
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --danger: #dc2626;
+
+  /* Bordures */
+  --border: #e5e7eb;
+
+  /* Highlight */
+  --highlight: rgba(14, 165, 233, 0.16);
+  --highlight-soft: rgba(14, 165, 233, 0.08);
+
+  /* Focus */
+  --ring: rgba(14, 165, 233, 0.35);
+
+  /* Shadow */
+  --shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
 body {
@@ -35,7 +90,6 @@ pre {
   font-family: "JetBrains Mono", monospace;
 }
 
-
 .couleur-primaire {
   color: var(--primary);
 }
@@ -43,9 +97,6 @@ pre {
 .couleur-texte-mute {
   color: var(--text-muted);
 }
-
-
-
 
 .tag {
   background: var(--bg-surface-2);
@@ -57,7 +108,7 @@ pre {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: all .2s ease;
+  transition: all 0.2s ease;
 }
 .tag-dot {
   width: 6px;
@@ -73,10 +124,6 @@ pre {
   background: var(--primary);
 }
 
-
-
-
-
 .json-editor {
   width: 100%;
   min-height: 260px;
@@ -84,8 +131,8 @@ pre {
   background: transparent; /* important */
   color: var(--text-main);
 
-  border: none;            /* suppression bordure */
-  outline: none;           /* suppression focus par défaut */
+  border: none; /* suppression bordure */
+  outline: none; /* suppression focus par défaut */
 
   font-family: "JetBrains Mono", monospace;
   font-size: 13px;
@@ -97,22 +144,19 @@ pre {
 
 .db-card {
   border: 1px solid var(--border);
-  transition: all .2s ease;
+  transition: all 0.2s ease;
 }
 
 .db-card.active {
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(59,130,246,.25);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
 }
-
-
 
 /* 🔥 Quand le parent est actif, on stylise le tag */
 .tag-selected.active .tag {
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(59,130,246,.25);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
 }
-
 
 .tag-selected.disabled {
   opacity: 0.4;
@@ -122,8 +166,6 @@ pre {
 .tag-selected.disabled .tag {
   pointer-events: none;
 }
-
-
 
 .token-card {
   background: rgba(255, 255, 255, 0.03);
@@ -138,7 +180,6 @@ pre {
   border-color: rgba(77, 163, 255, 0.3);
   box-shadow: 0 0 25px rgba(77, 163, 255, 0.08);
 }
-
 
 /* ================= TAG VARIANTS ================= */
 
@@ -192,7 +233,6 @@ pre {
   background: var(--text-muted);
 }
 
-
 /* ================= CARDS ================= */
 
 .card-dash {
@@ -201,7 +241,7 @@ pre {
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 24px;
-  transition: all .3s ease;
+  transition: all 0.3s ease;
 }
 
 .card-dash::after {
@@ -210,17 +250,142 @@ pre {
   inset: 0;
   border-radius: inherit;
   border: 1px solid transparent;
-  transition: all .3s ease;
+  transition: all 0.3s ease;
   pointer-events: none;
 }
 
 .card-dash:hover {
   background: var(--bg-surface-2);
   transform: translateY(-4px);
-  box-shadow: 0 12px 35px rgba(0,0,0,.45);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
 }
 
 .card-dash:hover::after {
   border-color: var(--primary);
   box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
 }
+
+/* ================= TABLE ================= */
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+/* table principale */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+/* header */
+.table thead {
+  background: var(--bg-surface-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.table th {
+  text-align: left;
+  padding: 14px 16px;
+  font-weight: 500;
+  color: var(--text-muted);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* cellules */
+.table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-main);
+}
+
+/* hover ligne */
+.table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.table tbody tr:hover {
+  background: var(--bg-surface-2);
+}
+
+/* zebra rows */
+.table-striped tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* cellule action */
+.table-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* bouton action minimal */
+.table-btn {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.table-btn:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+/* version compacte */
+.table-compact th,
+.table-compact td {
+  padding: 8px 12px;
+}
+
+/* alignements */
+.table-center {
+  text-align: center;
+}
+
+.table-right {
+  text-align: right;
+}
+
+/* ligne sélectionnée */
+.table-row-selected {
+  background: rgba(56, 189, 248, 0.08);
+}
+
+/* pagination */
+.table-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  color: var(--text-muted);
+  font-size: 13px;
+  border-top: 1px solid var(--border);
+}
+
+.table-pagination button {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.table-pagination button:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+
+

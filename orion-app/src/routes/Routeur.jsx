@@ -20,7 +20,7 @@ function Routeur() {
 
         {/* routes enfants */}
         <Route path="dash" element={<Dashboard />} />
-        <Route path="classes" element={<Classe />} />
+        <Route path="models" element={<Classe />} />
         <Route path="projets" element={<Projet />} />
         <Route path="api" element={<ApiTest />} />
 

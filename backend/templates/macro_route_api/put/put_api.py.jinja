@@ -1,0 +1,22 @@
+{% from "macro_route_api/put/toolkit_put.py.jinja" import genere_variable, route_path_get, genere_param_id, genere_user_id_jwt, genere_query_classe, genere_logique_update %}
+
+{% macro create_route_put(model, relations, use_jwt, use_session) %}
+{%- set relations_source = relations | selectattr("source", "equalto", model["nom"]) | list -%}
+{%- set relations_cible = relations | selectattr("cible", "equalto", model["nom"]) | list -%}
+{%- set est_protege = model.protege is defined and model.protege -%}
+{# definition des variables #}
+{% set v = namespace() -%}
+{{ genere_variable(model, v) -}}
+
+
+{# utilisation du blueprint #}
+@{{ v.blueprint }}.put("{{ route_path_get(relations, model, use_session, 'put') }}")
+{% if v.protege and use_jwt -%}
+@jwt_required()
+{% endif -%}
+def put_{{ v.nom }}({{ genere_param_id(relations, model, use_session, 'put') }}):
+{{ genere_user_id_jwt(v.protege, use_jwt) }}
+    with get_db() as db:
+{{ genere_query_classe(v.classe, v.nom) | indent(8, true) }}
+{{ genere_logique_update(v.schemaOne, v.nom) | indent(8, true) }}
+{% endmacro %}

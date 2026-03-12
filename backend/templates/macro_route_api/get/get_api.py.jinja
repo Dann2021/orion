@@ -1,0 +1,50 @@
+{% from "macro_route_api/get/toolkit_get.py.jinja" import genere_variable, route_path_get, genere_param_id, genere_user_id_jwt, check_get, genere_protege, genere_filtre_et_pagination,genere_database_query,genere_params_variable,genere_total_and_item,genere_reponse %}
+{# Générateur de route pour get #}
+
+
+{% macro create_route_get(model, relations, use_jwt, use_session) %}
+{%- set relations_source = relations | selectattr("source", "equalto", model["nom"]) | list -%}
+{%- set relations_cible = relations | selectattr("cible", "equalto", model["nom"]) | list -%}
+{%- set est_protege = model.protege is defined and model.protege -%}
+{# definition des variables #}
+{% set v = namespace() -%}
+{{ genere_variable(model, v) -}}
+
+
+{# utilisation du blueprint #}
+@{{ v.blueprint }}.get("{{ route_path_get(relations, model, use_session, 'get') }}")
+{% if v.protege and use_jwt -%}
+@jwt_required()
+{% endif -%}
+def get_{{ v.nom }}({{ genere_param_id(relations, model, use_session, 'get') }}):
+{{ genere_user_id_jwt(v.protege, use_jwt)  }}
+    with get_db() as db: 
+        {{ check_get(model) | indent(8) }}
+        {{ genere_protege(v.protege, use_jwt) | indent(12) }}
+        return reponse_json(data={{ v.schemaOne }}.dump({{ v.nom }}), status=200) 
+{% endmacro %}
+
+
+{# Générateur pour get all #}
+{% macro create_route_get_all(model, relations, use_jwt, use_session) %}
+{%- set relations_source = relations | selectattr("source", "equalto", model["nom"]) | list -%}
+{%- set relations_cible = relations | selectattr("cible", "equalto", model["nom"]) | list -%}
+{%- set est_protege = model.protege is defined and model.protege -%}
+{# definition des variables #}
+{% set v = namespace() -%}
+{{ genere_variable(model, v) -}}
+
+{# utilisation du blueprint #}
+@{{ v.blueprint }}.get("/")
+{% if v.protege and use_jwt -%}
+@jwt_required()
+{% endif -%}
+def get_all_{{ v.nom }}():
+{{ genere_user_id_jwt(v.protege, use_jwt) }}
+    with get_db() as db:
+{{ genere_filtre_et_pagination(limit="limit", offset="offset") | indent(8, true)}}
+{{ genere_database_query(v.classe) | indent(8, true) }}
+{{ genere_params_variable(v.classe) | indent(8, true) }}
+{{ genere_total_and_item(limit="limit", offset="offset") | indent(8, true) }}
+{{ genere_reponse(v.schemaMany) | indent(8,true) }}
+{% endmacro %}

@@ -1,4 +1,11 @@
-import { Bloc, Bouton, Card, Conteneur, Input } from "../../composants";
+import {
+  Bloc,
+  Bouton,
+  Breadcrumbs,
+  Card,
+  Conteneur,
+  Input,
+} from "../../composants";
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Bell, History, Search, User2, X } from "lucide-react";
@@ -52,7 +59,7 @@ export default function Home() {
           </div>
 
           <TabLien />
-          {/*<Breadcrumbs /> */}
+          <Breadcrumbs />
           <Outlet />
         </Bloc>
       </div>
@@ -77,7 +84,7 @@ const CardSearch = ({ closeSearch }) => {
         border: "1px solid var(--border)",
       }}
     >
-      <Card.Header className={"aff-flex jc-sb gap-2"}>
+      <Card.Header className={"aff-flex jc-sb gap-2 ai-mil"}>
         <Input
           dataType={"arrondie"}
           classNameSurcharge={"bloc-11"}
@@ -86,22 +93,21 @@ const CardSearch = ({ closeSearch }) => {
         >
           <Search className="iconeElement" size={16} />
         </Input>
-        <Bouton
+        {/*<Bouton
           onClick={closeSearch}
           className={"ronde-1"}
           theme="sombre"
           taille={"min"}
-        >
-          <X size={20} />
-        </Bouton>
+        >*/}
+        <X className="curseur-pointeur" onClick={closeSearch} size={20} />
+        {/*</Bouton>*/}
       </Card.Header>
 
       <Card.Corps className={"aff-flex ai-mil fd-col gap-3 p-2"}>
-
         <History size={16} style={{ color: "var(--text-muted)" }} />
-        <span style={{ color: "var(--text-muted)" }}>Aucun résultat trouvé</span>
-
-
+        <span style={{ color: "var(--text-muted)" }}>
+          Aucun résultat trouvé
+        </span>
       </Card.Corps>
     </Card>
   );

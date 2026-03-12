@@ -3,7 +3,7 @@ import {
   Braces,
   CircleAlert,
   HelpCircleIcon,
-  SettingsIcon,
+  SettingsIcon
 } from "lucide-react";
 import { useState } from "react";
 import { baseModele, baseProjet, baseUrl } from "../../api/api";
@@ -190,8 +190,10 @@ export default function Classe() {
 
   return (
     <Col className="gap-5">
-      <h1 className="inter">Classes</h1>
-
+      <h1 className="inter">Modeles</h1>
+  
+      
+      <p className="mb-2" style={{ color: "var(--text-muted)"}}>Concevez et gérez l’architecture des données de votre application.</p>
       {/* Toggle JSON */}
       <div
         className="aff-flex jc-sb ai-mil gap-3 bloc-myn-10 bloc-11"
@@ -200,7 +202,7 @@ export default function Classe() {
         <Selecteur
           value={projetId || ""}
           onChange={(e) => setProjetId(Number(e.target.value))}
-          className={"bloc-myn-4 bloc-pt-4 bloc-11 p-2"}
+          className={"bloc-myn-4 bloc-pt-4 bloc-11 p-myn-2"}
           style={style2}
         >
           <option className="taille-pt" value="">

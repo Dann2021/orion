@@ -1,0 +1,262 @@
+{% macro route_path(relations, classe) -%}
+    {%- set relation = relations | selectattr("cible", "equalto", classe.nom) | list -%}
+    {%- set nom = classe.nom | lower -%}
+
+    {%- if relation -%}
+        {%- set parent = relation[0].source | lower -%}
+        {{- "/" + parent + "/<int:id>/" + nom -}}
+    {%- else -%}
+        {#{- "/" + nom -}#}
+        {{- "/" }}
+    {%- endif -%}
+{%- endmacro %}
+
+
+{% macro genere_param_id(relations, classe) -%}
+    {%- set relation = relations | selectattr("cible", "equalto", classe.nom) | list -%}
+    {{- "id" if relation else "" -}}
+{%- endmacro %}
+
+
+
+
+
+{% macro avec_relation(relations, className) %}
+{# on parcourt la relations #}
+{% for rel in relations %}
+{# definition des variables #}
+{% set source_id = rel.source | lower ~ "_id" %}
+{% if rel.source == className %}
+{# Parent #}
+{% endif %}
+{% if rel.cible == className %}
+{# Enfant #}
+{{ source_id }} = db.query({{ className }}).filter({{ className }}.id == id).first()
+if not {{ source_id }}:
+    abort(404, description="Ressource introuvable")
+{% endif %}
+{% endfor %}
+{% endmacro %}
+
+
+{% macro create_route_block(model, relations) %}
+
+{# definition des variables #}
+{% set blue_print = model.nom | lower ~ "_bp" %}
+{% set UseSchemaModel = model.nom ~ "Schema" %}
+{% set ModelSchema = model.nom | lower ~ "_schema" %}
+{% set className = model.nom %}
+{% set nom = model.nom | lower %}
+
+{# definition de la variable relation #}
+
+
+{# utilisation du schema #}
+{{ ModelSchema }} = {{ UseSchemaModel }}()
+
+{# utilisation du blueprint #}
+@{{ blue_print }}.post("{{ route_path(relations, model) }}")
+def create_ressource({{ genere_param_id(relations, model) }}):
+    with get_db() as db:
+        try:
+            data = get_json_or_400()
+            {{ avec_relation(relations, className) }}
+            {# utilisation du schéma #}
+            # creation d'une instance de la classe {{ classe }}
+            {{ nom }} = {{ ModelSchema }}.load(data, session=db)
+            db.add({{ nom }})
+            db.commit()    
+            return reponse_json(data={{ ModelSchema }}.dump({{ nom }}), status=201)
+        except ValidationError as err:
+            abort(400, description=str(err.messages))
+
+
+{% endmacro %}
+
+
+# 062-83-63-79 Anouchka
+{# creation d'une macro pour définir les variables #}
+{# Ces variables seront utiliser dans le fichier global des routes api #}
+{% macro genere_variable(model) %}
+{% set nom = model.nom | lower %}
+{% set classe = model.nom | capitalize %}
+{% set blueprint = nom ~ "_bp" %}
+{% set nomFichierSchema = nom ~ "_schema" %}
+{% set nomSchema = classe ~ "Schema" %}
+{% set schemaOne = nom ~ "_schema" %}
+{% set schemaMany = nom ~ "_schemas" %}
+{% set session_id = nom ~ "_id" %}
+{% set base_route_api = nom ~ "s" %}
+{% set est_protege = model.protege is defined and model.protege %}
+{% endmacro %}
+
+{% macro genere_variable2(model, v) %}
+{%- set v.nom = model.nom | lower -%}
+{%- set v.classe = model.nom | capitalize -%}
+{%- set v.blueprint = v.nom ~ "_bp" -%}
+{%- set v.nomFichierSchema = v.nom ~ "_schema" -%}
+{%- set v.nomSchema = v.classe ~ "Schema" -%}
+{%- set v.schemaOne = v.nom ~ "_schema" -%}
+{%- set v.schemaMany = v.nom ~ "_schemas" -%}
+{%- set v.session_id = v.nom ~ "_id" -%}
+{%- set v.base_route_api = v.nom ~ "s" -%}
+{%- set v.est_protege = model.protege is defined and model.protege -%}
+
+{% endmacro %}
+
+
+{# variable pour jwt #}
+{% set JWT_IMPORTS = 
+"from flask_jwt_extended import (\n"
+"    create_access_token,\n"
+"    get_jwt_identity,\n"
+"    jwt_required,\n"
+"    set_access_cookies,\n"
+"    unset_jwt_cookies,\n"
+"    set_refresh_cookies,\n"
+"    create_refresh_token\n"
+")"
+%}
+
+{%- macro genere_import(model, relations, use_session, use_jwt) -%}
+{% set v = namespace() -%}
+{{ genere_variable2(model, v) -}}
+{%- set est_protege = model.protege is defined and model.protege -%}
+{%- set relations_source = relations | selectattr("source", "equalto", model["nom"]) | list -%}
+{%- set relations_cible = relations | selectattr("cible", "equalto", model["nom"]) | list -%}
+{# import des package de base toujours utilisé dans une route api #}
+from flask import Blueprint, request, abort
+from utils.utils import reponse_json, get_json_or_400
+from database import get_db
+from marshmallow import ValidationError
+from modeles.models import {{ v.classe -}}
+
+{# import du schema #}
+from schemas.{{ v.nomFichierSchema }} import {{ v.nomSchema -}}
+
+{# import des donnees conditionnelles #}
+{# session #}
+{%- if use_session -%}
+{# 1 #}
+from flask import session
+{% endif -%}
+
+{# jwt 1 #}
+{%- if use_jwt and v.classe == "User" -%}
+{# 2 #}
+from extensions import bcrypt
+{{ JWT_IMPORTS }}
+{%- endif -%}
+
+{%- if use_jwt -%}
+{# 3 #}
+{%- for rel in relations_cible -%}
+from modeles.models import {{ rel.source -}}
+{%- endfor -%}
+{%- endif -%}
+
+{# jwt 2 genre si le modele contient protege #}
+{%- if est_protege -%}
+{# 4 #}
+from flask_jwt_extended import jwt_required, get_jwt_identity
+{%- endif -%}
+
+{# si aucun n'est activé #}
+{%- if not use_session and not use_jwt %}
+{# 5 #}
+{% for rel in relations_cible -%}
+from modeles.models import {{ rel.source }}
+{% endfor -%}
+{% endif -%}
+
+{%- for rel in relations_source -%}
+{# 6 #}
+from schemas.{{ rel.cible | lower }}_schema import {{ rel.cible }}Schema
+{%- endfor -%}
+
+{% endmacro %}
+
+
+
+# Fait chatGPT
+{%- macro genere_import2(model, relations, use_session, use_jwt) -%}
+
+{# ================= VARIABLES ================= #}
+
+{%- set nom = model.nom | lower -%}
+{%- set classe = model.nom -%}
+{%- set blueprint = nom ~ "_bp" -%}
+{%- set nomFichierSchema = nom ~ "_schema" -%}
+{%- set nomSchema = classe ~ "Schema" -%}
+{%- set schemaOne = nom ~ "_schema" -%}
+{%- set schemaMany = nom ~ "_schemas" -%}
+{%- set session_id = nom ~ "_id" -%}
+{%- set base_route_api = nom ~ "s" -%}
+{%- set est_protege = model.protege is defined and model.protege -%}
+
+{# ================= RELATIONS ================= #}
+
+{% set relations_source = relations | selectattr("source", "equalto", model.nom) | list %}
+{% set relations_cible = relations | selectattr("cible", "equalto", model.nom) | list %}
+{% set relations_cible_unique = relations_cible | unique(attribute="source") | list %}
+
+{# ================= IMPORTS DE BASE ================= #}
+
+from flask import Blueprint, request, abort
+from utils.utils import reponse_json, get_json_or_400
+from database import get_db
+from marshmallow import ValidationError
+from modeles.models import {{ classe }}
+
+{# ================= SCHEMA ================= #}
+
+from schemas.{{ nomFichierSchema }} import {{ nomSchema }}
+
+{# ================= SESSION ================= #}
+
+{%- if use_session %}
+# 1 session use
+from flask import session
+{% endif %}
+
+{# ================= JWT USER ================= #}
+
+{%- if use_jwt and classe == "User" %}
+# 2 jwt and classe
+from extensions import bcrypt
+{{ JWT_IMPORTS }}
+{% endif %}
+
+{# ================= JWT RELATIONS ================= #}
+
+{%- if use_jwt %}
+# 3 use jwt
+{% for rel in relations_cible_unique %}
+from modeles.models import {{ rel.source }}
+{% endfor %}
+{% endif %}
+
+{# ================= PROTECTION ROUTES ================= #}
+
+{%- if est_protege %}
+# 4 protege
+from flask_jwt_extended import jwt_required, get_jwt_identity
+{% endif %}
+
+{# ================= CAS SANS AUTH ================= #}
+
+{%- if not use_session and not use_jwt %}
+# 5 not jwt and session
+{% for rel in relations_cible_unique %}
+from modeles.models import {{ rel.source }}
+{% endfor %}
+{% endif %}
+
+{# ================= SCHEMAS RELATIONS ================= #}
+
+{%- for rel in relations_source %}
+# 6 relations
+from schemas.{{ rel.cible | lower }}_schema import {{ rel.cible }}Schema
+{% endfor %}
+
+{%- endmacro %}

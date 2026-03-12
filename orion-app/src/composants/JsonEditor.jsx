@@ -13,8 +13,8 @@ const orionDarkTheme = {
     { token: "type", foreground: "22D3EE" },
   ],
   colors: {
-    "editor.background": "#111827", // --bg-surface
-    "editor.foreground": "#E5E7EB", // --text-main
+    "editor.background": "#17171A", // --bg-surface
+    "editor.foreground": "#E4E4E7", // --text-main
     "editorLineNumber.foreground": "#6B7280",
     "editorCursor.foreground": "#38BDF8",
 

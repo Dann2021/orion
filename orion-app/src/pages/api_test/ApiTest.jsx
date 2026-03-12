@@ -8,7 +8,7 @@ const style = {
 export default function ApiTest() {
   return (
     <Col>
-      <h1 className="mb-1 inter">Documentation API (REST)</h1>
+      <h2 className="mb-2 inter">Documentation API (REST)</h2>
       <PreviewApiTestJson dataJson={dataJson} />
     </Col>
   );

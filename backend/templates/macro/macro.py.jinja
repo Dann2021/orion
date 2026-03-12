@@ -1,24 +1,23 @@
 {# creation d'un generateur de route #}
-{% macro route_path(relations, classe) %}
-    {% set nom = classe.nom | lower %}
-    {% set route = "/" + nom %}
-    {% for rel in relations %}
-        {% if rel.cible == classe.nom %}
-            {% set parent = rel.source | lower %}
-            {% set route = "/" + parent + "/<int:id>" + route %}
-        {% endif %}
-    {% endfor %}
-    {{ route }}
-{% endmacro %}
+
+{% macro route_path(relations, classe) -%}
+    {%- set relation = relations | selectattr("cible", "equalto", classe.nom) | list -%}
+    {%- set nom = classe.nom | lower -%}
+
+    {%- if relation -%}
+        {%- set parent = relation[0].source | lower -%}
+        {{- "/" + parent + "/<int:id>/" + nom -}}
+    {%- else -%}
+        {{- "/" -}}
+    {%- endif -%}
+{%- endmacro %}
 
 
-{% macro genere_param_id(relations, classe) %}
-    {% for rel in relations %}
-        {% if rel.cible == classe.nom %}
-            id
-        {% endif %}
-    {% endfor %}
-{% endmacro %}
+
+{% macro genere_param_id(relations, classe) -%}
+    {%- set relation = relations | selectattr("cible", "equalto", classe.nom) | list -%}
+    {{- "id" if relation else "" -}}
+{%- endmacro %}
 
 
 {% macro ressource_lie(relations_cible, blueprint, schema) %}

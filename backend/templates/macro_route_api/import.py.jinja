@@ -1,0 +1,50 @@
+{% from "variable.py.jinja" import genere_variable, JWT_IMPORTS %}
+{% macro genere_import(model, relations, use_session, use_jwt) %}
+
+{% set nom = model.nom | lower %}
+{% set classe = model.nom | capitalize %}
+{% set nomFichierSchema = nom ~ "_schema" %}
+{% set nomSchema = classe ~ "Schema" %}
+{% set est_protege = model.protege is defined and model.protege %}
+
+{% set relations_source = relations | selectattr("source", "equalto", model["nom"]) | list %}
+{% set relations_cible = relations | selectattr("cible", "equalto", model["nom"]) | list %}
+
+from flask import Blueprint, request, abort
+from utils.utils import reponse_json, get_json_or_400
+from database import get_db
+from marshmallow import ValidationError
+from modeles.models import {{ classe }}
+{{ nom }}
+from schemas.{{ nomFichierSchema }} import {{ nomSchema }}
+
+{% if use_session %}
+from flask import session
+{% endif %}
+
+{% if use_jwt and classe == "User" %}
+from extensions import bcrypt
+{{ JWT_IMPORTS }}
+{% endif %}
+
+{% if use_jwt %}
+{% for rel in relations_cible %}
+from modeles.models import {{ rel.source }}
+{% endfor %}
+{% endif %}
+
+{% if est_protege %}
+from flask_jwt_extended import jwt_required, get_jwt_identity
+{% endif %}
+
+{% if not use_session and not use_jwt %}
+{% for rel in relations_cible %}
+from modeles.models import {{ rel.source }}
+{% endfor %}
+{% endif %}
+
+{% for rel in relations_source %}
+from schemas.{{ rel.cible | lower }}_schema import {{ rel.cible }}Schema
+{% endfor %}
+
+{% endmacro %}

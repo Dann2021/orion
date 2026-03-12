@@ -18,8 +18,9 @@ class {{ nomSchema }}(SQLAlchemyAutoSchema):
         model = {{ classe }}
         load_instance = True
         include_fk = True # Pour inclure les clés étrangères dans le schéma
+        {% if model.nom == "User" %}
         # exclude = ("password",) # Exclure le champ password du schéma
-
+        {% endif %}
 
 
 

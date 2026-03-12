@@ -1,4 +1,4 @@
-import { Book, BracesIcon, Code, Folder, KeyRound, LayoutDashboard } from "lucide-react";
+import { Book, Code, Folder, KeyRound, Layers, LayoutDashboard } from "lucide-react";
 
 export const liens = [
   {
@@ -10,9 +10,9 @@ export const liens = [
   },
   {
     id: 2,
-    lien: "classes",
-    label: "Classes",
-    icone: BracesIcon,
+    lien: "models",
+    label: "Modeles",
+    icone: Layers,
     etat: false
   },
 

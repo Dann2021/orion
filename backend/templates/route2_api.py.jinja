@@ -1,0 +1,21 @@
+{# import des macros de jinja #}
+{% from "macro_route_api/variable.py.jinja" import genere_import %}
+{% from "macro_route_api/post/post_api.py.jinja" import create_route_post2 %}
+{% from "macro_route_api/get/get_api.py.jinja" import create_route_get, create_route_get_all %}
+{% from "macro_route_api/put/put_api.py.jinja" import create_route_put %}
+{% from "macro_route_api/delete/delete_api.py.jinja" import create_route_delete %}
+{% from "macro_route_api/variable.py.jinja" import genere_blueprint, genere_use_schema %}
+{# generation d'import #}
+{{ genere_import(model, relations, use_session, use_jwt) }}
+
+# Utilisation du blueprint
+{{ genere_blueprint(model) }}
+
+# utilisation du schéma
+{{ genere_use_schema(model) }}
+# Principe du CRUD
+{{ create_route_post2(model,relations, use_jwt, use_session) }}
+{{ create_route_get(model,relations, use_jwt, use_session) }}
+{{ create_route_get_all(model,relations, use_jwt, use_session) }}
+{{ create_route_put(model,relations, use_jwt, use_session) }}
+{{ create_route_delete(model,relations, use_jwt, use_session) }}

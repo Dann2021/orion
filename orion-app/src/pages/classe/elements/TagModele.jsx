@@ -1,3 +1,5 @@
+import { Box } from "lucide-react";
+
 const TagModele = ({
   nom,
   onClick,
@@ -15,9 +17,11 @@ const TagModele = ({
         "aff-flex fd-col jc-sb gap-1 survol curseur-pointeur " + className
       }
     >
+     
       <pre className="tag">
-        <span className="tag-dot-2"></span>
-        <code>{nom}</code>
+         <Box size={20} />
+        {/*<span className="tag-dot-2"></span> */}
+        <code className="te-noir" >{nom}</code>
       </pre>
     </Component>
   );

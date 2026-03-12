@@ -115,6 +115,11 @@ def generate_backend_for_projet(
     # recuperation de la session
 
     # 2️⃣ routes CRUD (1 modèle à la fois)
+    all_relations = []  # ici
+
+    for m in schemas:
+        if "relations" in m:
+            all_relations.extend(m["relations"])
 
     for model in schemas:
 
@@ -123,7 +128,7 @@ def generate_backend_for_projet(
         # Relations qui ciblent ce modèle
         relations_cible = [rel for rel in relations if rel["cible"] == model["nom"]]
 
-        generateur(
+        """generateur(
             template_name="route_api.py.jinja",
             contexte={
                 "model": model,
@@ -133,6 +138,18 @@ def generate_backend_for_projet(
                 "relations_source": relations_source,
                 "relations_cible": relations_cible,
                 "relations": relations,
+            },
+            chemin_sortie=routes_path,
+            nom_fichier=f"{model['nom'].lower()}.py",
+        )
+        """
+        generateur(
+            template_name="route2_api.py.jinja",
+            contexte={
+                "model": model,
+                "use_session": auth.get("type") == "session",  # Boolean
+                "use_jwt": auth.get("type") == "jwt",  # Boolean
+                "relations": all_relations,
             },
             chemin_sortie=routes_path,
             nom_fichier=f"{model['nom'].lower()}.py",
@@ -337,7 +354,7 @@ def generate(projet_id):
 
             # 🔹 Enregistrement de la config DB
             db_config = Data(
-                type=base_de_donnees.get("type"),
+                type=base_de_donnees.get("type"),  # type: ignore
                 host=base_de_donnees.get("host"),
                 port=base_de_donnees.get("port"),
                 name=base_de_donnees.get("database"),

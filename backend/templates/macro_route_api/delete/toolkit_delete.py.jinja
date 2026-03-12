@@ -1,0 +1,75 @@
+{# Générateur de variable #}
+{% macro genere_variable(model, v) %}
+{%- set v.nom = model.nom | lower -%}
+{%- set v.classe = model.nom | capitalize -%}
+{%- set v.blueprint = v.nom ~ "_bp" -%}
+{%- set v.nomFichierSchema = v.nom ~ "_schema" -%}
+{%- set v.nomSchema = v.classe ~ "Schema" -%}
+{%- set v.schemaOne = v.nom ~ "_schema" -%}
+{%- set v.schemaMany = v.nom ~ "_schemas" -%}
+{%- set v.session_id = v.nom ~ "_id" -%}
+{%- set v.base_route_api = v.nom ~ "s" -%}
+{%- set v.protege = model.protege is defined and model.protege -%}
+{% endmacro %}
+
+{# Route delete #}
+{% macro genere_delete(nom) %}
+db.delete({{ nom }})
+db.commit()
+return reponse_json(data={"message":"ressource ({{ nom }}) supprimée avec succes"})
+{% endmacro %}
+
+
+{% macro genere_user_id_jwt(protege, use_jwt) %}
+{% if protege and use_jwt %}
+    user_id = get_jwt_identity()
+{% endif -%}
+{% endmacro %}
+
+
+{# Générateur de route path #}
+{% macro route_path_get(relations, classe, use_session, action="create") -%}
+    {%- set relation = relations | selectattr("cible","equalto",classe.nom) | first -%}
+    {%- set nom = classe.nom | lower -%}
+
+    {# Route GET d'une ressource #}
+    {%- if action == "get" or action == "put" or action == "delete" -%}
+        {{- "/<int:id>" -}}
+
+    {# Route POST relationnelle REST #}
+    {%- elif relation and not use_session -%}
+        {%- set parent = relation.source | lower -%}
+        {{- "/" + parent + "/<int:id>/" + nom -}}
+
+    {# Route POST workflow session #}
+    {%- elif relation and use_session -%}
+        {{- "/" -}}
+
+    {# Route POST simple #}
+    {%- else -%}
+        {{- "/" -}}
+    {%- endif -%}
+{%- endmacro %}
+
+{# Générateur de paramètre id #}
+{% macro genere_param_id(relations, classe, use_session, action="create") -%}
+    {%- set relation = relations | selectattr("cible","equalto",classe.nom) | first -%}
+
+    {%- if action == "get" or action == "put" or action == "delete" -%}
+        id
+
+    {%- elif relation and not use_session -%}
+        id
+
+    {%- else -%}
+        
+    {%- endif -%}
+{%- endmacro %}
+
+
+{# Générateur pour PUT #}
+{% macro genere_query_classe(classe, nom) %}
+{{ nom }} = db.get({{ classe }}, id)
+if not {{ nom }}:
+    abort(404, description="{{ nom }} non trouvé")
+{% endmacro %}

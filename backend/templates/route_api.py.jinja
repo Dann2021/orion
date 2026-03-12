@@ -55,11 +55,11 @@ from schemas.{{ rel.cible | lower }}_schema import {{ rel.cible }}Schema
 {{ schemaMany }} = {{ nomSchema }}(many=True)
 
 # Creation de la ressource {{ nom }} 
-@{{ blue_print }}.post("{{ ROUTE_COLLECTION }}")
+@{{ blue_print }}.post("{{ route_path(relations, model) }}")
 {% if est_protege %}
 @jwt_required()
 {% endif %}
-def creer_ressource_{{ nom }}():
+def creer_ressource_{{ nom }}({{ genere_param_id(relations, model) }}):
     
     {% if est_protege %}
     user_id = get_jwt_identity()
@@ -95,9 +95,10 @@ def creer_ressource_{{ nom }}():
             {% if not use_session and not use_jwt %}
             {% for rel in relations_cible %}
             {% set source_id = rel.source | lower ~ "_id"%}
-            {{ source_id }} = db.get({{ rel.source }}, data.get("{{ source_id }}"))
+            {{ source_id }} = db.get({{ rel.source }}, id)
             if not {{ source_id }}:
-                abort(400, description="{{ source_id }} introuvable")
+                abort(404, description="{{ source_id }} introuvable")
+            
             {% endfor %}
             {% endif %}
 
@@ -112,6 +113,10 @@ def creer_ressource_{{ nom }}():
 
             # creation d'une instance de la classe {{ classe }}
             {{ nom }} = {{ schemaOne }}.load(data, session=db)
+            {% for rel in relations_cible %}
+            {% set source_id = rel.source | lower ~ "_id"%}
+            {{ nom }}.{{ source_id }} = id
+            {% endfor %}
 
             db.add({{ nom }})
             db.commit()

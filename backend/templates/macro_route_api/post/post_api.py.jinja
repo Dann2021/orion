@@ -1,0 +1,60 @@
+{% from "macro_route_api/post/toolkit_post.py.jinja" import genere_variable, route_path, genere_param_id, genere_user_id_jwt, genere_logique_jwt_user, genere_use_session, genere_protege, genere_logique_instance, genere_add_to_database, genere_session_source %}
+
+{# Générateur de route pour post #}
+{% macro create_route_post(model, relations, use_jwt, use_session) %}
+{%- set relations_source = relations | selectattr("source", "equalto", model["nom"]) | list -%}
+{%- set relations_cible = relations | selectattr("cible", "equalto", model["nom"]) | list -%}
+{%- set est_protege = model.protege is defined and model.protege -%}
+{# definition des variables #}
+{% set v = namespace() -%}
+{{ genere_variable(model, v) -}}
+
+
+{# utilisation du blueprint #}
+@{{ v.blueprint }}.post("{{ route_path(relations, model, use_session) }}")
+{% if v.protege and use_jwt -%}
+@jwt_required()
+{% endif -%}
+def post_{{ v.nom }}({{ genere_param_id(relations, model, use_session) }}):
+    {{ genere_user_id_jwt(v.protege, use_jwt) }}
+    with get_db() as db:
+        try:
+            data = get_json_or_400()
+            {{ genere_logique_jwt_user(use_jwt, v.classe) | indent(12, true) }}
+            {{ genere_use_session(use_session, relations_cible) | indent(12, true) }}
+            {{ genere_protege(v.protege, use_jwt) | indent(12, true) }}
+            {{ genere_logique_instance(v.nom, v.schemaOne, relations_cible, use_session) | indent(12, true) }}
+            {{ genere_add_to_database(v.nom) | indent(12, true) }}
+            {{ genere_session_source(use_session, relations_source, v.nom) | indent(12, true) }}
+            return reponse_json(data={{ v.schemaOne }}.dump({{ v.nom }}), status=201)
+        except ValidationError as err:
+            abort(400, description=str(err.messages))
+{% endmacro %}
+
+{% macro create_route_post2(model, relations, use_jwt, use_session) -%}
+{%- set relations_source = relations | selectattr("source", "equalto", model["nom"]) | list -%}
+{%- set relations_cible = relations | selectattr("cible", "equalto", model["nom"]) | list -%}
+{%- set est_protege = model.protege is defined and model.protege -%}
+
+{%- set v = namespace() -%}
+{{- genere_variable(model, v) -}}
+
+@{{ v.blueprint }}.post("{{ route_path(relations, model, use_session) }}")
+{% if v.protege and use_jwt %}
+@jwt_required()
+{% endif %}
+def post_{{ v.nom }}({{ genere_param_id(relations, model, use_session) }}):
+    {{- genere_user_id_jwt(v.protege, use_jwt) }}
+    with get_db() as db:
+        try:
+            data = get_json_or_400()
+{{ genere_logique_jwt_user(use_jwt, v.classe) | indent(12, true) }}
+{{ genere_use_session(use_session, relations_cible) | indent(12, true) }}
+{{ genere_protege(v.protege, use_jwt) | indent(12, true) }}
+{{ genere_logique_instance(v.nom, v.schemaOne, relations_cible, use_session) | indent(12, true) }}
+{{ genere_add_to_database(v.nom) | indent(12, true) }}
+{{ genere_session_source(use_session, relations_source, v.nom) | indent(12, true) }}
+            return reponse_json(data={{ v.schemaOne }}.dump({{ v.nom }}), status=201)
+        except ValidationError as err:
+            abort(400, description=str(err.messages))
+{% endmacro %}

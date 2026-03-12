@@ -7,7 +7,7 @@ import Lien from "./ui/Lien";
 const TabLien = () => {
   const tabs = [
     { label: "Dashboard", chemin: "/dash" },
-    { label: "Classes", chemin: "/classes" },
+    { label: "Modeles", chemin: "/models" },
     { label: "Projets", chemin: "/projets" },
     { label: "API", chemin: "/api" },
     { label: "Docs", chemin: "/docs" },

@@ -1,0 +1,109 @@
+{# Générateur de logique metier api #}
+{% macro genere_variable(model, v) %}
+{%- set v.nom = model.nom | lower -%}
+{%- set v.classe = model.nom | capitalize -%}
+{%- set v.blueprint = v.nom ~ "_bp" -%}
+{%- set v.nomFichierSchema = v.nom ~ "_schema" -%}
+{%- set v.nomSchema = v.classe ~ "Schema" -%}
+{%- set v.schemaOne = v.nom ~ "_schema" -%}
+{%- set v.schemaMany = v.nom ~ "_schemas" -%}
+{%- set v.session_id = v.nom ~ "_id" -%}
+{%- set v.base_route_api = v.nom ~ "s" -%}
+{%- set v.protege = model.protege is defined and model.protege -%}
+{% endmacro %}
+
+
+{# Générateur de route path #}
+{% macro route_path(relations, classe, use_session) -%}
+    {%- set relation = relations | selectattr("cible", "equalto", classe.nom) | list -%}
+    {%- set nom = classe.nom | lower -%}
+    {%- if relation and not use_session -%}
+        {%- set parent = relation[0].source | lower -%}
+        {{- "/" + parent + "/<int:id>/" + nom -}}
+    {%- elif relation and use_session -%}
+        {{- "/"  -}}
+    {%- else -%}
+        {{- "/" -}}
+    {%- endif -%}
+{%- endmacro %}
+
+{# Generateur de id #}
+{% macro genere_param_id(relations, classe, use_session) -%}
+    {%- set relation = relations | selectattr("cible", "equalto", classe.nom) | list -%}
+    {%- if relation and not use_session -%}
+        id
+    {%- else -%}   
+    {%- endif -%}
+{%- endmacro %}
+
+{# Pour use_jwt et model.nom == "User" #}
+{%- macro genere_logique_jwt_user(use_jwt, classe) %}
+{%- if use_jwt and classe == "User" %}
+password_hashed = bcrypt.generate_password_hash(data['password']).decode("utf-8")
+data['password'] = password_hashed
+{% endif -%}
+{% endmacro -%}
+
+
+{# Pour use_session #}
+{%- macro genere_use_session(use_session, relations_cible) %}
+{%- if use_session %}
+{%- for rel in relations_cible %}
+{% set source_id = rel.source | lower ~ "_id" %}
+{{ source_id }} = session.get("{{ source_id }}")
+if not {{ source_id }}:
+    abort(400)
+{#data["{{ source_id }}"] = {{ source_id }}  #}
+{% endfor -%}
+{% endif -%}
+{% endmacro -%}
+
+
+{# Pour protege #}
+{%- macro genere_protege(protege, use_jwt) %}
+{% if protege and use_jwt %}
+data['user_id'] = user_id
+{% endif %}
+{% endmacro -%}
+
+
+
+{# Pour creer une instance #}
+{% macro genere_logique_instance(nom, schema, relations_cible, use_session ) %}
+{%- for rel in relations_cible %}
+{% set source_id = rel.source | lower ~ "_id" %}
+
+{% if use_session %}
+data["{{ source_id }}"] = {{ source_id }}
+{% else %}
+data["{{ source_id }}"] = id
+{% endif %}
+
+{%- endfor %}
+{{ nom }} = {{ schema }}.load(data, session=db)
+{% endmacro %}
+
+
+
+{# Pour dans la base de données #}
+{%- macro genere_add_to_database(nom) %}
+db.add({{ nom }})
+db.commit() 
+{% endmacro -%}
+
+
+{# Pour une use_session et relations source #}
+{% macro genere_session_source(use_session, relations_source, nom) %}
+{%- if use_session %}
+{%- for rel in relations_source %}
+{% set source_id = rel.source | lower ~ "_id"%}
+session["{{ source_id }}"] = {{ nom }}.id
+{% endfor -%}
+{% endif -%}
+{% endmacro %}
+
+{% macro genere_user_id_jwt(protege, use_jwt) %}
+{% if protege and use_jwt %}
+    user_id = get_jwt_identity()
+{% endif -%}
+{% endmacro %}

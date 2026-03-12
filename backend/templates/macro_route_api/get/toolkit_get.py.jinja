@@ -1,0 +1,137 @@
+{# Générateur de variable #}
+{% macro genere_variable(model, v) %}
+{%- set v.nom = model.nom | lower -%}
+{%- set v.classe = model.nom | capitalize -%}
+{%- set v.blueprint = v.nom ~ "_bp" -%}
+{%- set v.nomFichierSchema = v.nom ~ "_schema" -%}
+{%- set v.nomSchema = v.classe ~ "Schema" -%}
+{%- set v.schemaOne = v.nom ~ "_schema" -%}
+{%- set v.schemaMany = v.nom ~ "_schemas" -%}
+{%- set v.session_id = v.nom ~ "_id" -%}
+{%- set v.base_route_api = v.nom ~ "s" -%}
+{%- set v.protege = model.protege is defined and model.protege -%}
+{% endmacro %}
+
+{# Générateur de route path #}
+{% macro route_path_get(relations, classe, use_session, action="create") -%}
+    {%- set relation = relations | selectattr("cible","equalto",classe.nom) | first -%}
+    {%- set nom = classe.nom | lower -%}
+
+    {# Route GET d'une ressource #}
+    {%- if action == "get" or action == "put" or action == "delete" -%}
+        {{- "/<int:id>" -}}
+
+    {# Route POST relationnelle REST #}
+    {%- elif relation and not use_session -%}
+        {%- set parent = relation.source | lower -%}
+        {{- "/" + parent + "/<int:id>/" + nom -}}
+
+    {# Route POST workflow session #}
+    {%- elif relation and use_session -%}
+        {{- "/" -}}
+
+    {# Route POST simple #}
+    {%- else -%}
+        {{- "/" -}}
+    {%- endif -%}
+{%- endmacro %}
+
+{# Générateur de paramètre id #}
+{% macro genere_param_id(relations, classe, use_session, action="create") -%}
+    {%- set relation = relations | selectattr("cible","equalto",classe.nom) | first -%}
+
+    {%- if action == "get" or action == "put" or action == "delete" -%}
+        id
+
+    {%- elif relation and not use_session -%}
+        id
+
+    {%- else -%}
+        
+    {%- endif -%}
+{%- endmacro %}
+
+
+{% macro genere_user_id_jwt(protege, use_jwt) %}
+{% if  protege and use_jwt %}
+    user_id = get_jwt_identity()
+{% endif %}
+{% endmacro %}
+
+
+
+{% macro check_get(model) -%}
+{%- set nom = model.nom | lower -%}
+{%- set classe = model.nom -%}
+{{ nom }} = db.get({{ classe }}, id)
+if not {{ nom }}:
+    abort(404, description="{{ nom }} introuvable")
+{%- endmacro %}
+
+
+{# Pour protege #}
+{% macro genere_protege(protege, use_jwt) %}
+{% if protege and use_jwt %}
+data['user_id'] = user_id
+{% endif %}
+{% endmacro %}
+
+
+
+{# Toolkit pour get all #}
+
+{# Toolkit pour get_all #}
+{% macro genere_filtre_et_pagination(limit, offset) %}
+{{ limit }} = min(request.args.get("{{ limit }}", 20, type=int), 100)
+{{ offset }} = request.args.get("{{ offset }}", 0, type=int)
+{% endmacro %}
+
+{% macro genere_database_query(classe) %}
+query = db.query({{ classe }})
+{% endmacro %}
+
+
+
+{% macro genere_params_variable(classe) %}
+filtres = request.args.to_dict()
+
+filtres.pop("limit", None)
+filtres.pop("offset", None)
+sort = filtres.pop("sort", None)
+
+# on parcourt le dictionnaire de filtres
+for cle, valeur in filtres.items():
+    # on verifie si la classe contient un attribut 
+    if hasattr({{ classe }}, cle):
+        colonne = getattr({{ classe }}, cle)
+        if isinstance(valeur, str):
+            if valeur.lower() == "true":
+                valeur = True
+            elif valeur.lower() == "false":
+                valeur = False
+        query = query.filter(colonne == valeur)
+
+# tri dynamique
+if sort:
+    desc = sort.startswith("-")
+    champ = sort.lstrip("-")
+    
+    if hasattr({{ classe }}, champ):
+        colonne = getattr({{ classe }}, champ)
+        query = query.order_by(colonne.desc() if desc else colonne)
+{% endmacro %}
+
+{% macro genere_total_and_item(limit, offset) %}
+total = query.count()
+items = query.offset({{ offset }}).limit({{ limit }}).all()
+{% endmacro -%}
+
+{%- macro genere_reponse(schema_many) %}
+return reponse_json(
+    data={{ schema_many }}.dump(items), 
+    meta={
+        "total":total, 
+        "limit":limit, 
+        "offset":offset
+    })
+{% endmacro -%}
